@@ -1,0 +1,112 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: var(--color-bg-alt);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+}
+
+.logo {
+  font-family: var(--font-accent);
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+}
+
+.navDesktop {
+  display: none;
+}
+
+.navList {
+  display: flex;
+  gap: var(--space-4);
+  font-family: var(--font-display);
+  font-weight: 500;
+}
+
+.navList a:hover,
+.navList a:focus-visible {
+  color: var(--color-accent);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.hamburger {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0.5rem;
+}
+
+.hamburger:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.hamburgerBar {
+  display: block;
+  height: 2px;
+  width: 100%;
+  background-color: var(--color-text);
+}
+
+.navPanel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 200;
+  width: min(80vw, 320px);
+  background-color: var(--color-bg-alt);
+  padding: var(--space-7) var(--space-4) var(--space-4);
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+}
+
+.navPanelOpen {
+  transform: translateX(0);
+}
+
+.navPanelList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  background-color: color-mix(in srgb, black 45%, transparent);
+  border: none;
+}
+
+@media (min-width: 768px) {
+  .navDesktop {
+    display: block;
+  }
+
+  .hamburger {
+    display: none;
+  }
+
+  .navPanel,
+  .overlay {
+    display: none;
+  }
+}

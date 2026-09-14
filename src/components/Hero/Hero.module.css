@@ -1,0 +1,12 @@
+.hero {
+  min-height: calc(100vh - 4rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6) var(--space-4);
+}
+
+.heading {
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  text-align: center;
+}

@@ -1,0 +1,8 @@
+.about {
+  padding: var(--space-8) var(--space-4);
+  background-color: var(--color-bg-alt);
+}
+
+.heading {
+  font-size: clamp(2rem, 5vw, 3rem);
+}

@@ -1,0 +1,18 @@
+/* ==========================================================================
+   Self-hosted custom fonts.
+
+   Currently empty — Silkscreen (used as the placeholder for --font-accent)
+   is loaded via the @fontsource/silkscreen package in main.jsx.
+
+   TODO: once Robin owns the licensed OffBit Dot Bold font file, add it here
+   with @font-face and point --font-accent at it in tokens.css.
+
+   Example:
+   @font-face {
+     font-family: 'OffBit Dot Bold';
+     src: url('/fonts/offbit-dot-bold.woff2') format('woff2');
+     font-weight: 700;
+     font-style: normal;
+     font-display: swap;
+   }
+   ========================================================================== */

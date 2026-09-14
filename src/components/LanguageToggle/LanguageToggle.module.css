@@ -1,0 +1,24 @@
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  padding: 0 var(--space-2);
+  border-radius: 999px;
+  font-family: var(--font-accent);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: var(--color-text);
+  transition: background-color 0.2s ease;
+}
+
+.toggle:hover,
+.toggle:focus-visible {
+  background-color: var(--color-bg);
+}
+
+.toggle:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}

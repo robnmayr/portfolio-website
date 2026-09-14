@@ -1,0 +1,21 @@
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background-color: var(--color-bg-alt);
+}
+
+.links {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.links a:hover,
+.links a:focus-visible,
+.backToTop:hover,
+.backToTop:focus-visible {
+  color: var(--color-accent);
+}

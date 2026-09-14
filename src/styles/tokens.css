@@ -1,0 +1,43 @@
+/* ==========================================================================
+   Design tokens
+   Central design config. Change values here, they propagate everywhere.
+   ========================================================================== */
+
+:root {
+  /* Colors — light mode (default) */
+  --color-bg: #f6f6f6;
+  --color-bg-alt: #e4e4e4;
+  --color-text: #161616;
+  --color-accent: #fc6510;
+
+  /* Fonts */
+  --font-display: 'Exo 2 Variable', 'Exo 2', sans-serif;
+  --font-body: 'Work Sans', sans-serif;
+  /* TODO: swap to OffBit Dot Bold once Robin owns the licensed font file,
+     self-host via @font-face in src/styles/fonts.css */
+  --font-accent: 'Silkscreen', monospace;
+
+  /* Spacing scale */
+  --space-1: 0.25rem;  /* 4px */
+  --space-2: 0.5rem;   /* 8px */
+  --space-3: 1rem;     /* 16px */
+  --space-4: 1.5rem;   /* 24px */
+  --space-5: 2rem;     /* 32px */
+  --space-6: 3rem;     /* 48px */
+  --space-7: 4rem;     /* 64px */
+  --space-8: 6rem;     /* 96px */
+
+  /* Breakpoints (reference only — CSS custom properties can't be used in
+     @media queries, so mirror these literal values in each stylesheet) */
+  /* --breakpoint-sm: 480px */
+  /* --breakpoint-md: 768px */
+  /* --breakpoint-lg: 1024px */
+  /* --breakpoint-xl: 1280px */
+}
+
+[data-theme='dark'] {
+  --color-bg: #1a1a1a;
+  --color-bg-alt: #242424;
+  --color-text: #f2f2f2;
+  --color-accent: #fc6510;
+}
