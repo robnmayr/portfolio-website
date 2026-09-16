@@ -1,0 +1,102 @@
+{
+  "package.json": {
+    "mtime": 1789395987.985037,
+    "ast_hash": "46922cf060d2c36952c8b7c8befe2870",
+    "semantic_hash": "46922cf060d2c36952c8b7c8befe2870"
+  },
+  "src/App.jsx": {
+    "mtime": 1789396134.5396323,
+    "ast_hash": "c8c6f2154fe912c2ed0f246ed4df0cee",
+    "semantic_hash": "c8c6f2154fe912c2ed0f246ed4df0cee"
+  },
+  "src/components/About/About.jsx": {
+    "mtime": 1789396108.1492536,
+    "ast_hash": "849e8b931c3fa9502beb69edf91c99da",
+    "semantic_hash": "849e8b931c3fa9502beb69edf91c99da"
+  },
+  "src/components/Footer/Footer.jsx": {
+    "mtime": 1789396125.2472348,
+    "ast_hash": "44baf7a58193a7698686e0d49e1165c3",
+    "semantic_hash": "44baf7a58193a7698686e0d49e1165c3"
+  },
+  "src/components/Header/Header.jsx": {
+    "mtime": 1789396082.6700494,
+    "ast_hash": "3565dbd62fe4250d64bfa65429e6000d",
+    "semantic_hash": "3565dbd62fe4250d64bfa65429e6000d"
+  },
+  "src/components/Hero/Hero.jsx": {
+    "mtime": 1789396402.8608663,
+    "ast_hash": "d3c835e81a5415468d9ff0cab216ebe4",
+    "semantic_hash": "d3c835e81a5415468d9ff0cab216ebe4"
+  },
+  "src/components/LanguageToggle/LanguageToggle.jsx": {
+    "mtime": 1789396067.8418725,
+    "ast_hash": "7df4fade13d9ae001bc847685f5c5701",
+    "semantic_hash": "7df4fade13d9ae001bc847685f5c5701"
+  },
+  "src/components/Projects/Projects.jsx": {
+    "mtime": 1789396115.3198721,
+    "ast_hash": "9a038a504c19a14a34c3c9588eacbb5c",
+    "semantic_hash": "9a038a504c19a14a34c3c9588eacbb5c"
+  },
+  "src/components/ThemeToggle/ThemeToggle.jsx": {
+    "mtime": 1789445092.891857,
+    "ast_hash": "3414f9cb7ef1e70ba4d82adaa65de320",
+    "semantic_hash": "3414f9cb7ef1e70ba4d82adaa65de320"
+  },
+  "src/context/LanguageContext.jsx": {
+    "mtime": 1789396042.609213,
+    "ast_hash": "0304baefca8e68edaa86f4adafa4d327",
+    "semantic_hash": "0304baefca8e68edaa86f4adafa4d327"
+  },
+  "src/context/ThemeContext.jsx": {
+    "mtime": 1789445114.0470479,
+    "ast_hash": "5f0bb0759ce502447ce4c455ff6715b2",
+    "semantic_hash": "5f0bb0759ce502447ce4c455ff6715b2"
+  },
+  "src/hooks/useLenis.js": {
+    "mtime": 1789546607.908759,
+    "ast_hash": "814f6093dccef4df5471620f533f666b",
+    "semantic_hash": "814f6093dccef4df5471620f533f666b"
+  },
+  "src/hooks/usePrefersReducedMotion.js": {
+    "mtime": 1789396047.3243,
+    "ast_hash": "57608815d170593efe3a339f0e8c4067",
+    "semantic_hash": "57608815d170593efe3a339f0e8c4067"
+  },
+  "src/i18n/dictionary.js": {
+    "mtime": 1789396036.3214707,
+    "ast_hash": "2b18234dedf03006e7e20bdcdd0de196",
+    "semantic_hash": "2b18234dedf03006e7e20bdcdd0de196"
+  },
+  "src/main.jsx": {
+    "mtime": 1789396140.8214788,
+    "ast_hash": "d8aba5dfde04c19fa965b3b1c03ff791",
+    "semantic_hash": "d8aba5dfde04c19fa965b3b1c03ff791"
+  },
+  "vite.config.js": {
+    "mtime": 1789395984.6613798,
+    "ast_hash": "b70bd863dc278a195a0863a39ce193c4",
+    "semantic_hash": "b70bd863dc278a195a0863a39ce193c4"
+  },
+  ".github/workflows/deploy.yml": {
+    "mtime": 1789396148.7276516,
+    "ast_hash": "10b3d12a6ce70acfa54180cf1664201f",
+    "semantic_hash": "10b3d12a6ce70acfa54180cf1664201f"
+  },
+  "README.md": {
+    "mtime": 1789396160.9325676,
+    "ast_hash": "68d7bf96119bd9147b0e96a0010aaec8",
+    "semantic_hash": "68d7bf96119bd9147b0e96a0010aaec8"
+  },
+  "index.html": {
+    "mtime": 1789395995.9895988,
+    "ast_hash": "485bf6a7c55c78431d22e8fab01256da",
+    "semantic_hash": "485bf6a7c55c78431d22e8fab01256da"
+  },
+  "public/404.html": {
+    "mtime": 1789396153.4319706,
+    "ast_hash": "ecdadf50019a331bec4cc1d80d67aa44",
+    "semantic_hash": "ecdadf50019a331bec4cc1d80d67aa44"
+  }
+}
