@@ -10,6 +10,10 @@
   --color-text: #161616;
   --color-accent: #fc6510;
 
+  /* Sticky header height — kept as a token so anchor-scroll offsets
+     (scroll-margin-top on sections) stay in sync with the real header. */
+  --header-height: 68px;
+
   /* Fonts */
   --font-display: 'Exo 2 Variable', 'Exo 2', sans-serif;
   --font-body: 'Work Sans', sans-serif;

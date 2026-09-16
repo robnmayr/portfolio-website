@@ -11,7 +11,10 @@
 
 html {
   -webkit-text-size-adjust: 100%;
-  scroll-behavior: smooth;
+  /* No `scroll-behavior: smooth` here: Lenis (useLenis.js) owns smooth
+     scrolling and syncs its internal position to anchor-link clicks. Native
+     CSS smooth-scroll running at the same time fights Lenis's next raf tick
+     and the page stops short of the target instead of reaching it. */
 }
 
 body {
@@ -87,6 +90,21 @@ body::before {
     transparent 1px
   );
   background-size: 24px 24px;
+}
+
+/* --------------------------------------------------------------------------
+   Anchor-scroll targets
+   The header is sticky, so jumping straight to a section's top tucks its
+   heading behind the header. scroll-margin-top offsets the landing spot —
+   Lenis's scrollTo() reads this directly, and it's also what the browser's
+   native anchor jump uses for the reduced-motion path (no Lenis, see
+   useLenis.js), so both stay consistent from one rule.
+   -------------------------------------------------------------------------- */
+
+#hero,
+#about,
+#projects {
+  scroll-margin-top: var(--header-height);
 }
 
 /* --------------------------------------------------------------------------
