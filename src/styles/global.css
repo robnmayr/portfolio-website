@@ -15,20 +15,21 @@ html {
      scrolling and syncs its internal position to anchor-link clicks. Native
      CSS smooth-scroll running at the same time fights Lenis's next raf tick
      and the page stops short of the target instead of reaching it. */
-
-  /* Deliberately no background-color here: with none set, the UA propagates
-     body's background-color up to paint the canvas instead (CSS root
-     background propagation) — which is what keeps it painted behind the
-     z-index: -1 dot-pattern pseudo-element (body::before) rather than in
-     front of it. Giving html its own background was tried as a mix-blend-
-     mode fix, but that wasn't the actual cause (see #root below) — it only
-     had the side effect of hiding the dot pattern, so it's been removed. */
 }
 
 body {
   margin: 0;
   min-height: 100vh;
   background-color: var(--color-bg);
+  /* Dot-pattern texture, as body's own background-image layered over its
+     background-color. background-attachment: fixed keeps it pinned to the
+     viewport while content scrolls, rather than scrolling along with it. */
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--color-text) 12%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+  background-attachment: fixed;
   color: var(--color-text);
   font-family: var(--font-body);
   line-height: 1.5;
@@ -77,37 +78,7 @@ button {
 
 #root {
   position: relative;
-  /* Deliberately no `isolation: isolate` here: the header's mix-blend-mode
-     elements (Header.module.css) need to blend against body's own
-     background and the body::before dot-pattern texture below, both of
-     which are siblings of #root, not descendants. Isolating #root would
-     wall the blend off from them — confirmed by testing, not a guess. */
-}
-
-/* Header is position: absolute (see Header.module.css) and out of normal
-   flow, so give main the space it used to occupy in flow before Hero. */
-#main-content {
-  padding-top: var(--header-height);
-}
-
-/* --------------------------------------------------------------------------
-   Dot-pattern texture
-   Fixed, full-viewport background layer. Content panels (sections, header,
-   footer) set a solid --color-bg-alt background so the pattern only reads
-   through in the gaps between panels, not behind text.
-   -------------------------------------------------------------------------- */
-
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image: radial-gradient(
-    color-mix(in srgb, var(--color-text) 12%, transparent) 1px,
-    transparent 1px
-  );
-  background-size: 24px 24px;
+  isolation: isolate;
 }
 
 /* --------------------------------------------------------------------------
@@ -185,4 +156,16 @@ body::before {
   animation-duration: 0.001ms !important;
   animation-iteration-count: 1 !important;
   transition-duration: 0.001ms !important;
+}
+
+/* --------------------------------------------------------------------------
+   Theme toggle view transition
+   Suppresses the browser's default cross-fade so only the custom
+   circle-spread clip animation (ThemeToggle.jsx) is visible.
+   -------------------------------------------------------------------------- */
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
 }

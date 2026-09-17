@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { HomeIcon, UserIcon, Squares2X2Icon } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
@@ -14,12 +14,18 @@ const SECTIONS = [
 ]
 
 // Adapted from the Watermelon UI "Step Indicator" (ui.watermelon.sh,
-// animated-components/step-indicator). Kept: the clip-path/blur tooltip
-// morph driven by motion/react. Changed: ported to plain JSX, icons are any
-// component taking className instead of react-icons' IconType, the tooltip
-// sits below the pill row instead of above it, and a second "current
-// section" (scrollspy) index drives the pill's filled state independently
-// of hover.
+// animated-components/step-indicator). Kept: the per-item blur/opacity
+// tooltip reveal driven by motion/react. Dropped: the original's shared
+// clip-path/translateX morph sliding one tooltip's bubble into the next
+// across all three pills' concatenated widths — that math depended on
+// Work Sans's measured text width matching its rendered width pixel for
+// pixel, and Safari resolves the resulting clip-path region several
+// pixels narrower than Chromium for the same input, visibly pushing the
+// icon/label toward the right edge. Each pill now owns an independent
+// tooltip, centered under its own button with plain CSS — no cross-item
+// measurement, so nothing to disagree on between engines. A second
+// "current section" (scrollspy) index still drives the pill's filled
+// state independently of hover.
 export function SectionNav() {
   const { t } = useLanguage()
   const prefersReducedMotion = usePrefersReducedMotion()
@@ -31,26 +37,6 @@ export function SectionNav() {
 
   const [hoverIndex, setHoverIndex] = useState(null)
   const [currentSection, setCurrentSection] = useState(0)
-  const [coords, setCoords] = useState({ clipPath: '', translateX: 0 })
-  const [isEntering, setIsEntering] = useState(true)
-
-  const measureRefs = useRef([])
-  const buttonRefs = useRef([])
-  const tooltipRef = useRef(null)
-  const timeoutRef = useRef(null)
-
-  // Defensive nudge for Safari: it has been observed to occasionally paint
-  // a stale/unblended frame right after a mix-blend-mode element's
-  // backdrop-affecting state changes via React (class swap, new mount)
-  // rather than a full repaint trigger. Forcing a synchronous layout read
-  // right after the DOM update, before the browser paints, has been a
-  // reliable cross-browser way to make it recompute on the same frame.
-  useLayoutEffect(() => {
-    buttonRefs.current.forEach((button) => {
-      if (button) void button.offsetHeight
-    })
-    if (tooltipRef.current) void tooltipRef.current.offsetHeight
-  }, [hoverIndex, currentSection])
 
   useEffect(() => {
     const sections = SECTIONS.map((section) => document.getElementById(section.id)).filter(
@@ -96,144 +82,56 @@ export function SectionNav() {
     return () => observer.disconnect()
   }, [])
 
-  const calculatePosition = (index) => {
-    const activeLabel = measureRefs.current[index]
-    const activeButton = buttonRefs.current[index]
-
-    if (!activeLabel || !activeButton) return null
-
-    const labelLeft = activeLabel.offsetLeft
-    const labelWidth = activeLabel.offsetWidth
-    const labelCenter = labelLeft + labelWidth / 2
-
-    const buttonLeft = activeButton.offsetLeft
-    const buttonWidth = activeButton.offsetWidth
-    const buttonCenter = buttonLeft + buttonWidth / 2
-
-    const totalWidth = measureRefs.current.reduce(
-      (acc, el) => acc + (el?.offsetWidth || 0),
-      0,
-    )
-
-    const cLeft = (labelLeft / totalWidth) * 100
-    const cRight = 100 - ((labelLeft + labelWidth) / totalWidth) * 100
-
-    return {
-      clipPath: `inset(0 ${cRight}% 0 ${cLeft}% round 9999px)`,
-      translateX: buttonCenter - labelCenter,
-    }
-  }
-
-  const handleShow = (index) => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current)
-
-    const performUpdate = () => {
-      const newCoords = calculatePosition(index)
-      if (newCoords) {
-        setCoords(newCoords)
-        setHoverIndex(index)
-      }
-    }
-
-    setIsEntering(hoverIndex === null)
-    performUpdate()
-  }
-
-  const handleHide = () => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current)
-    setHoverIndex(null)
-    setCoords({ clipPath: '', translateX: 0 })
-    setIsEntering(true)
-  }
-
   return (
-    <div className={styles.nav} onMouseLeave={handleHide}>
-      <AnimatePresence>
-        {hoverIndex !== null && coords.clipPath !== '' && (
-          <motion.div
-            ref={tooltipRef}
-            className={styles.tooltipWrap}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: prefersReducedMotion ? 0 : 0.2 }}
-          >
-            <motion.div
-              className={styles.tooltip}
-              animate={{
-                clipPath: coords.clipPath,
-                x: coords.translateX,
-              }}
-              transition={{
-                type: 'spring',
-                bounce: 0,
-                duration: prefersReducedMotion || isEntering ? 0 : 0.4,
-              }}
-              onUpdate={() => {
-                if (isEntering) setIsEntering(false)
-              }}
-            >
-              <div className={styles.tooltipInner}>
-                {steps.map((step, index) => (
-                  <motion.div
-                    key={`real-${step.id}`}
-                    animate={{
-                      opacity: hoverIndex === index ? 1 : 0,
-                      filter: hoverIndex === index ? 'blur(0px)' : 'blur(4px)',
-                    }}
-                    transition={{ duration: prefersReducedMotion ? 0 : 0.4 }}
-                    className={styles.tooltipItem}
-                  >
-                    <step.icon className={styles.tooltipIcon} />
-                    <span className={styles.tooltipLabel}>{step.label}</span>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+    <div className={styles.nav} onMouseLeave={() => setHoverIndex(null)}>
       {steps.map((step, index) => (
-        <button
-          key={step.id}
-          ref={(el) => {
-            buttonRefs.current[index] = el
-          }}
-          onMouseEnter={() => handleShow(index)}
-          onFocus={() => handleShow(index)}
-          onBlur={(event) => {
-            if (!event.currentTarget.contains(event.relatedTarget)) {
-              handleHide()
-            }
-          }}
-          onClick={() => scrollToSection(step.id)}
-          className={styles.pillButton}
-          aria-label={step.label}
-        >
-          <div
-            className={cn(
-              styles.pill,
-              (hoverIndex === index || currentSection === index) && styles.pillActive,
-            )}
-          />
-        </button>
-      ))}
-
-      <div className={styles.measure} aria-hidden="true">
-        {steps.map((step, index) => (
-          <div
-            key={`measure-${step.id}`}
-            ref={(el) => {
-              measureRefs.current[index] = el
+        <div key={step.id} className={styles.pillWrap}>
+          <button
+            onMouseEnter={() => setHoverIndex(index)}
+            onFocus={() => setHoverIndex(index)}
+            onBlur={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget)) {
+                setHoverIndex(null)
+              }
             }}
-            className={styles.tooltipItem}
+            onClick={() => scrollToSection(step.id)}
+            className={styles.pillButton}
+            aria-label={step.label}
           >
-            <step.icon className={styles.tooltipIcon} />
-            <span className={styles.tooltipLabel}>{step.label}</span>
-          </div>
-        ))}
-      </div>
+            <div
+              className={cn(
+                styles.pill,
+                (hoverIndex === index || currentSection === index) && styles.pillActive,
+              )}
+            />
+          </button>
+
+          <AnimatePresence>
+            {hoverIndex === index && (
+              <motion.div
+                className={styles.tooltip}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: prefersReducedMotion ? 0 : 0.2 }}
+              >
+                <motion.div
+                  className={styles.tooltipContent}
+                  initial={{ opacity: 0, filter: 'blur(4px)' }}
+                  animate={{ opacity: 1, filter: 'blur(0px)' }}
+                  exit={{ opacity: 0, filter: 'blur(4px)' }}
+                  transition={{ duration: prefersReducedMotion ? 0 : 0.4 }}
+                >
+                  <span className={styles.tooltipIconWrap}>
+                    <step.icon className={styles.tooltipIcon} />
+                  </span>
+                  <span className={styles.tooltipLabel}>{step.label}</span>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      ))}
     </div>
   )
 }

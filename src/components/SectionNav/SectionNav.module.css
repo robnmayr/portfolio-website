@@ -2,7 +2,12 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: var(--space-5);
+  gap: var(--space-3);
+}
+
+.pillWrap {
+  position: relative;
+  display: inline-flex;
 }
 
 .pillButton {
@@ -19,68 +24,57 @@
   border-radius: 999px;
 }
 
-/* Pure white at varying opacity, never a different hue: hue differences
-   blend unpredictably under mix-blend-mode: difference depending on what's
-   behind the bar, opacity variants on white stay legible in all four
-   light/dark site x light/dark page-content combinations. */
 .pill {
   position: absolute;
   inset: 0;
   border-radius: 999px;
-  background-color: rgb(255 255 255 / 35%);
-  mix-blend-mode: difference;
-  /* No transition on background-color: Safari has been observed to paint a
-     stale/unblended frame partway through a transitioning blended
-     property (reported as a white flash on hover before it "catches up"
-     to the correct blend). Making the state change instant removes the
-     multi-frame window where that can happen. */
+  background-color: color-mix(in srgb, var(--color-text) 35%, transparent);
+  transition: background-color 0.2s ease;
 }
 
 .pillActive {
-  background-color: #fff;
+  background-color: var(--color-text);
 }
 
-.tooltipWrap {
+/* Centered under its own pill via plain CSS, not shared measurement across
+   all three pills — see the comment in SectionNav.jsx for why. */
+.tooltip {
   position: absolute;
   top: 100%;
-  left: 0;
+  left: 50%;
+  transform: translateX(-50%);
   margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background-color: var(--color-text);
+  border-radius: 999px;
+  white-space: nowrap;
   pointer-events: none;
 }
 
-.tooltip {
-  display: flex;
-  background-color: #fff;
-  border-radius: 999px;
-  mix-blend-mode: difference;
-}
-
-.tooltipInner {
-  display: inline-flex;
-  align-items: center;
-}
-
-.tooltipItem {
+/* Separate from .tooltip so the bubble (fade only) and the icon/label
+   (fade + blur-into-focus, on its own longer timing) animate as two
+   distinct layers, matching the original design. */
+.tooltipContent {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  white-space: nowrap;
 }
 
-/* Not mix-blend-mode'd like the bubble itself: Framer Motion's per-item
-   opacity/filter animation (the blur reveal, see SectionNav.jsx) makes this
-   element its own isolated compositing group, so a nested blend-mode here
-   can't compound with the bubble's blend the way the bubble does with the
-   page — it just renders flat, invisible against the bubble. Using the
-   page's own background token instead gives legible contrast against
-   whatever the bubble's difference blend resolves to (dark bubble in light
-   mode calls for light text, and vice versa) without depending on that
-   compounding. */
-.tooltipIcon {
+/* The icon's size lives on this wrapping span, not the <svg> itself: Safari
+   has been observed to not count an <svg> child's own width/height toward
+   its flex parent's auto-width calculation (a replaced-element quirk),
+   silently shrinking the bubble and eating into the padding on one side.
+   A plain span is a normal box with no such quirk. */
+.tooltipIconWrap {
+  display: inline-flex;
   width: 1.1rem;
   height: 1.1rem;
   flex-shrink: 0;
+}
+
+.tooltipIcon {
+  width: 100%;
+  height: 100%;
   color: var(--color-bg);
 }
 
@@ -89,15 +83,4 @@
   font-weight: 600;
   font-size: 0.95rem;
   color: var(--color-bg);
-}
-
-.measure {
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: flex;
-  height: 0;
-  overflow: hidden;
-  opacity: 0;
-  pointer-events: none;
 }

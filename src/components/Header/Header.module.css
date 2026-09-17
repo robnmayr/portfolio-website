@@ -1,18 +1,7 @@
 .header {
-  /* position: absolute + JS-driven `top` (usePinToViewportTop), not
-     sticky/fixed: fixed/sticky elements reposition on the compositor
-     thread during scroll without a real repaint, so mix-blend-mode never
-     recomputes against the newly-scrolled content underneath.
-     Deliberately no z-index either, even though the bar must render above
-     Hero/About/Projects: a z-index here would give it its own stacking
-     context, and mix-blend-mode descendants can't blend past their own
-     stacking context boundary — they'd only ever see each other, not the
-     page. position: absolute alone already paints above static-flow
-     content, so no z-index is needed to sit on top. */
-  position: absolute;
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
+  z-index: 100;
 }
 
 .bar {
@@ -34,8 +23,7 @@
   width: 2rem;
   height: 2rem;
   flex-shrink: 0;
-  background-color: #fff;
-  mix-blend-mode: difference;
+  background-color: var(--color-text);
   -webkit-mask-image: url('../../assets/icons/logo.svg');
   mask-image: url('../../assets/icons/logo.svg');
   -webkit-mask-size: contain;

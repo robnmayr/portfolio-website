@@ -1,4 +1,13 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 
 const ThemeContext = createContext(null)
 const STORAGE_KEY = 'theme'
@@ -20,7 +29,14 @@ export function ThemeProvider({ children }) {
   // know whether to keep following the OS setting or respect the override.
   const hasUserOverrideRef = useRef(getStoredTheme() !== null)
 
-  useEffect(() => {
+  // useLayoutEffect, not useEffect: the theme toggle's view-transition
+  // animation (ThemeToggle.jsx) wraps toggleTheme() in flushSync and needs
+  // the data-theme attribute to have actually changed by the time that
+  // call returns. flushSync only guarantees synchronous render + commit —
+  // a plain useEffect is still scheduled as a deferred passive effect and
+  // wouldn't have run yet, so the view transition could snapshot the "new"
+  // state before the attribute flip actually happened.
+  useLayoutEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
     document.documentElement.style.colorScheme = theme
   }, [theme])
