@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { HomeIcon, UserIcon, Squares2X2Icon } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
@@ -36,7 +36,21 @@ export function SectionNav() {
 
   const measureRefs = useRef([])
   const buttonRefs = useRef([])
+  const tooltipRef = useRef(null)
   const timeoutRef = useRef(null)
+
+  // Defensive nudge for Safari: it has been observed to occasionally paint
+  // a stale/unblended frame right after a mix-blend-mode element's
+  // backdrop-affecting state changes via React (class swap, new mount)
+  // rather than a full repaint trigger. Forcing a synchronous layout read
+  // right after the DOM update, before the browser paints, has been a
+  // reliable cross-browser way to make it recompute on the same frame.
+  useLayoutEffect(() => {
+    buttonRefs.current.forEach((button) => {
+      if (button) void button.offsetHeight
+    })
+    if (tooltipRef.current) void tooltipRef.current.offsetHeight
+  }, [hoverIndex, currentSection])
 
   useEffect(() => {
     const sections = SECTIONS.map((section) => document.getElementById(section.id)).filter(
@@ -44,17 +58,38 @@ export function SectionNav() {
     )
     if (sections.length === 0) return undefined
 
+    // A running set of which sections currently intersect the top band,
+    // rebuilt incrementally per callback since IntersectionObserver only
+    // reports entries whose status *changed*, not a full snapshot — using
+    // just the latest callback's entries (as a first pass here did)
+    // silently kept a stale section active whenever the correct section's
+    // own status happened not to change on a given scroll update.
+    const intersecting = new Set()
+
     const observer = new IntersectionObserver(
       (entries) => {
-        const mostVisible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
+        entries.forEach((entry) => {
+          const index = SECTIONS.findIndex((section) => section.id === entry.target.id)
+          if (index === -1) return
+          if (entry.isIntersecting) {
+            intersecting.add(index)
+          } else {
+            intersecting.delete(index)
+          }
+        })
 
-        if (!mostVisible) return
-        const index = SECTIONS.findIndex((section) => section.id === mostVisible.target.id)
-        if (index !== -1) setCurrentSection(index)
+        // Prefer the intersecting section furthest down the page (i.e.
+        // most recently scrolled to) rather than the highest intersection
+        // ratio: ratio-sorting picked the wrong section for a tall Hero
+        // and had no explicit floor case for "back at the very top." A
+        // wide band anchored to the top of the viewport (top 40%) plus
+        // "pick the last match" naturally falls back to Hero once nothing
+        // past it still qualifies.
+        if (intersecting.size > 0) {
+          setCurrentSection(Math.max(...intersecting))
+        }
       },
-      { rootMargin: '-40% 0px -50% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] },
+      { rootMargin: '0px 0px -60% 0px', threshold: 0 },
     )
 
     sections.forEach((section) => observer.observe(section))
@@ -116,6 +151,7 @@ export function SectionNav() {
       <AnimatePresence>
         {hoverIndex !== null && coords.clipPath !== '' && (
           <motion.div
+            ref={tooltipRef}
             className={styles.tooltipWrap}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

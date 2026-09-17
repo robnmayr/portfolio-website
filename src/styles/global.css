@@ -16,12 +16,13 @@ html {
      CSS smooth-scroll running at the same time fights Lenis's next raf tick
      and the page stops short of the target instead of reaching it. */
 
-  /* When only `body` sets a background-color, the UA propagates it up to
-     paint the canvas instead (CSS root-background propagation), and
-     mix-blend-mode elements (the app bar) can't correctly read a
-     canvas-level background as their backdrop. Giving `html` its own
-     background keeps body's background a normal, blend-visible paint. */
-  background-color: var(--color-bg);
+  /* Deliberately no background-color here: with none set, the UA propagates
+     body's background-color up to paint the canvas instead (CSS root
+     background propagation) — which is what keeps it painted behind the
+     z-index: -1 dot-pattern pseudo-element (body::before) rather than in
+     front of it. Giving html its own background was tried as a mix-blend-
+     mode fix, but that wasn't the actual cause (see #root below) — it only
+     had the side effect of hiding the dot pattern, so it's been removed. */
 }
 
 body {
