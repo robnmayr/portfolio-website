@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import Lenis from 'lenis'
 import { usePrefersReducedMotion } from './usePrefersReducedMotion'
+import { setLenisInstance } from '../lib/lenisInstance'
 
 // Initializes Lenis smooth scroll on mount. Skips it entirely when the user
 // prefers reduced motion, so the browser's native (instant) scroll is used.
@@ -14,6 +15,7 @@ export function useLenis() {
       duration: 1.2,
       smoothWheel: true,
     })
+    setLenisInstance(lenis)
 
     let rafId
     function raf(time) {
@@ -47,6 +49,7 @@ export function useLenis() {
       document.removeEventListener('click', handleAnchorClick)
       cancelAnimationFrame(rafId)
       lenis.destroy()
+      setLenisInstance(null)
     }
   }, [prefersReducedMotion])
 }

@@ -1,8 +1,18 @@
 .header {
-  position: sticky;
+  /* position: absolute + JS-driven `top` (usePinToViewportTop), not
+     sticky/fixed: fixed/sticky elements reposition on the compositor
+     thread during scroll without a real repaint, so mix-blend-mode never
+     recomputes against the newly-scrolled content underneath.
+     Deliberately no z-index either, even though the bar must render above
+     Hero/About/Projects: a z-index here would give it its own stacking
+     context, and mix-blend-mode descendants can't blend past their own
+     stacking context boundary — they'd only ever see each other, not the
+     page. position: absolute alone already paints above static-flow
+     content, so no z-index is needed to sit on top. */
+  position: absolute;
   top: 0;
-  z-index: 100;
-  background-color: var(--color-bg-alt);
+  left: 0;
+  right: 0;
 }
 
 .bar {
@@ -14,99 +24,30 @@
 }
 
 .logo {
-  font-family: var(--font-accent);
-  font-size: 1rem;
-  letter-spacing: 0.05em;
+  display: inline-block;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  background-color: #fff;
+  mix-blend-mode: difference;
+  -webkit-mask-image: url('../../assets/icons/logo.svg');
+  mask-image: url('../../assets/icons/logo.svg');
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
-.navDesktop {
-  display: none;
-}
-
-.navList {
-  display: flex;
-  gap: var(--space-4);
-  font-family: var(--font-display);
-  font-weight: 500;
-}
-
-.navList a:hover,
-.navList a:focus-visible {
-  color: var(--color-accent);
+.logo:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 4px;
 }
 
 .actions {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-}
-
-.hamburger {
-  display: inline-flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 5px;
-  width: 2.25rem;
-  height: 2.25rem;
-  padding: 0.5rem;
-}
-
-.hamburger:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-}
-
-.hamburgerBar {
-  display: block;
-  height: 2px;
-  width: 100%;
-  background-color: var(--color-text);
-}
-
-.navPanel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 200;
-  width: min(80vw, 320px);
-  background-color: var(--color-bg-alt);
-  padding: var(--space-7) var(--space-4) var(--space-4);
-  transform: translateX(100%);
-  transition: transform 0.3s ease;
-}
-
-.navPanelOpen {
-  transform: translateX(0);
-}
-
-.navPanelList {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  font-family: var(--font-display);
-  font-size: 1.25rem;
-}
-
-.overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 150;
-  background-color: color-mix(in srgb, black 45%, transparent);
-  border: none;
-}
-
-@media (min-width: 768px) {
-  .navDesktop {
-    display: block;
-  }
-
-  .hamburger {
-    display: none;
-  }
-
-  .navPanel,
-  .overlay {
-    display: none;
-  }
+  flex-shrink: 0;
 }

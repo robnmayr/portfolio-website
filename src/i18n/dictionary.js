@@ -6,10 +6,6 @@ export const dictionary = {
       about: 'About',
       projects: 'Projects',
     },
-    header: {
-      menuOpen: 'Open menu',
-      menuClose: 'Close menu',
-    },
     theme: {
       toggleToLight: 'Switch to light mode',
       toggleToDark: 'Switch to dark mode',
@@ -33,10 +29,6 @@ export const dictionary = {
       hero: 'Start',
       about: 'Über mich',
       projects: 'Projekte',
-    },
-    header: {
-      menuOpen: 'Menü öffnen',
-      menuClose: 'Menü schließen',
     },
     theme: {
       toggleToLight: 'Zum hellen Modus wechseln',

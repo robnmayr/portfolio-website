@@ -15,6 +15,13 @@ html {
      scrolling and syncs its internal position to anchor-link clicks. Native
      CSS smooth-scroll running at the same time fights Lenis's next raf tick
      and the page stops short of the target instead of reaching it. */
+
+  /* When only `body` sets a background-color, the UA propagates it up to
+     paint the canvas instead (CSS root-background propagation), and
+     mix-blend-mode elements (the app bar) can't correctly read a
+     canvas-level background as their backdrop. Giving `html` its own
+     background keeps body's background a normal, blend-visible paint. */
+  background-color: var(--color-bg);
 }
 
 body {
@@ -69,7 +76,17 @@ button {
 
 #root {
   position: relative;
-  isolation: isolate;
+  /* Deliberately no `isolation: isolate` here: the header's mix-blend-mode
+     elements (Header.module.css) need to blend against body's own
+     background and the body::before dot-pattern texture below, both of
+     which are siblings of #root, not descendants. Isolating #root would
+     wall the blend off from them — confirmed by testing, not a guess. */
+}
+
+/* Header is position: absolute (see Header.module.css) and out of normal
+   flow, so give main the space it used to occupy in flow before Hero. */
+#main-content {
+  padding-top: var(--header-height);
 }
 
 /* --------------------------------------------------------------------------
