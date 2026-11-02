@@ -162,7 +162,12 @@ function __OriginkitBase_DitherReveal(props: DitherRevealProps) {
     if (!canvas || !container) return;
     const gl = canvas.getContext("webgl", {
       antialias: false,
-      premultipliedAlpha: false,
+      // Local tweak: was `false` (straight-alpha output). Safari ignores that
+      // for composited canvases and treats the output as premultiplied, which
+      // makes semi-transparent edge pixels too bright (a light halo around the
+      // subject). The shader now outputs premultiplied color, which every
+      // browser composites the same way.
+      premultipliedAlpha: true,
     });
     if (!gl) return;
 
@@ -250,12 +255,6 @@ function __OriginkitBase_DitherReveal(props: DitherRevealProps) {
       if (img.naturalHeight > 0)
         imgAspect = img.naturalWidth / img.naturalHeight;
       gl.bindTexture(gl.TEXTURE_2D, texture);
-      // Local tweak: upload with premultiplied alpha. PNGs with transparency
-      // store arbitrary (often white or black) RGB under fully transparent
-      // pixels; with straight alpha, linear filtering blends that into the
-      // semi-transparent edge pixels and draws a light/dark halo around the
-      // subject. The fragment shader un-premultiplies again.
-      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
       try {
         gl.texImage2D(
           gl.TEXTURE_2D,
@@ -506,8 +505,6 @@ void main() {
     p /= max(uScale, 0.01);
     vec2 sampleUv = fitUv(p + 0.5);
     vec4 color = texture2D(uTexture, sampleUv);
-    // The texture is premultiplied (see the upload); recover the true color.
-    color.rgb = color.a > 0.001 ? color.rgb / color.a : vec3(0.0);
     vec2 inside = step(vec2(0.0), sampleUv) * step(sampleUv, vec2(1.0));
     color *= inside.x * inside.y;
 
@@ -521,7 +518,8 @@ void main() {
     float outerRadius = uRevealRadius * (1.0 + uRevealSoftness) + 0.001;
     float revealAmount = (1.0 - smoothstep(innerRadius, outerRadius, revealDist)) * uMouseActive;
 
-    gl_FragColor = vec4(mix(ditherColor, color.rgb, revealAmount), color.a);
+    // Premultiplied output (see the context options): scale color by alpha.
+    gl_FragColor = vec4(mix(ditherColor, color.rgb, revealAmount) * color.a, color.a);
 }
 `;
 
