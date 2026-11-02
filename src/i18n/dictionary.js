@@ -14,6 +14,10 @@ export const dictionary = {
       toggle: 'Switch language',
       switchTo: 'Deutsch',
     },
+    hero: {
+      imageAlt: 'A human hand and a robotic hand reaching toward each other',
+      scrollHint: 'Scroll for more details',
+    },
     footer: {
       backToTop: 'Back to top',
       linkedin: 'LinkedIn',
@@ -37,6 +41,10 @@ export const dictionary = {
     language: {
       toggle: 'Sprache wechseln',
       switchTo: 'English',
+    },
+    hero: {
+      imageAlt: 'Eine menschliche Hand und eine Roboterhand, die sich einander entgegenstrecken',
+      scrollHint: 'Scrolle für mehr Details',
     },
     footer: {
       backToTop: 'Nach oben',

@@ -1,12 +1,133 @@
 .hero {
-  min-height: calc(100vh - 4rem);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-6) var(--space-4);
+  position: relative;
+  /* Exactly one screen under the sticky header: the (oversized, mostly
+     transparent) image box is taken out of flow so it can't stretch the hero. */
+  height: calc(100svh - var(--header-height));
+  min-height: 34rem;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: var(--space-6) var(--space-4) var(--space-8);
 }
 
-.heading {
-  font-size: clamp(2.5rem, 8vw, 5rem);
+/* The image (z-index 2) is layered in front of the name (z-index 1). */
+.name {
+  grid-area: 1 / 1;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  column-gap: 0.25em;
+  font-family: var(--font-name);
+  font-weight: 400;
+  font-size: clamp(4rem, 15.5vw, 15rem);
+  line-height: 0.95;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
   text-align: center;
+  /* Sits above the vertical middle of the hero. */
+  translate: 0 -16svh;
+}
+
+.word {
+  display: inline-flex;
+}
+
+/* Clips each letter so it can slide up into view from below its own baseline. */
+.charMask {
+  display: inline-block;
+  overflow: hidden;
+  padding-top: 0.05em;
+}
+
+.char {
+  display: inline-block;
+}
+
+/* The two hands sit side by side in one tilted group. Wider than the hero on
+   purpose: tilted and oversized, they reach diagonally across the whole
+   section (the hero clips the overflow). */
+.hands {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  width: min(118%, 2200px);
+  /* Lets horizontal finger drags reach the reveal; vertical drags still scroll. */
+  touch-action: pan-y;
+  /* Centered, then nudged so the hands overlap only the bottom of the name. */
+  translate: -50% -47%;
+}
+
+/* Width and aspect ratio are set inline from the image sizes. */
+.hand {
+  position: relative;
+  flex: none;
+}
+
+/* Oversized, transparent canvas around the hand (inset is set inline from
+   CANVAS_PAD) so the drifting image is never clipped at the canvas edge. */
+.canvasPad {
+  position: absolute;
+}
+
+.scrollHint {
+  position: absolute;
+  bottom: var(--space-5);
+  left: 0;
+  right: 0;
+  z-index: 3;
+  width: max-content;
+  margin-inline: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-accent);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text);
+  transition: color 0.2s ease;
+}
+
+.scrollHint:hover,
+.scrollHint:focus-visible {
+  color: var(--color-accent);
+}
+
+.scrollHint:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 6px;
+  border-radius: 4px;
+}
+
+/* Pixelarticons "arrow-big-down" (MIT, Gerrit Halfmann), drawn as a mask so it
+   takes the button's text color. Sized to the label's cap height; 12px is
+   exactly half of the icon's 24px grid, so every pixel stays 1px and crisp. */
+.arrow {
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  background-color: currentColor;
+  -webkit-mask-image: url('../../assets/icons/arrow-big-down.svg');
+  mask-image: url('../../assets/icons/arrow-big-down.svg');
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+@media (max-width: 768px) {
+  .name {
+    font-size: clamp(3.5rem, 19vw, 7rem);
+    translate: 0 -12svh;
+  }
+
+  .hands {
+    translate: -50% -52%;
+  }
 }

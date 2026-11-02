@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import '@fontsource-variable/exo-2'
 import '@fontsource/work-sans'
 import '@fontsource/silkscreen'
+import '@fontsource/anton'
 
 import './styles/tokens.css'
 import './styles/fonts.css'

@@ -17,6 +17,8 @@
   /* Fonts */
   --font-display: 'Exo 2 Variable', 'Exo 2', sans-serif;
   --font-body: 'Work Sans', sans-serif;
+  /* Big, blocky name in the hero. */
+  --font-name: 'Anton', Impact, 'Arial Black', sans-serif;
   /* TODO: swap to OffBit Dot Bold once Robin owns the licensed font file,
      self-host via @font-face in src/styles/fonts.css */
   --font-accent: 'Silkscreen', monospace;
