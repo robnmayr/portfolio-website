@@ -1,8 +1,42 @@
 .about {
-  padding: var(--space-8) var(--space-4);
+  padding: calc(var(--grid-size) * 6) var(--page-inset);
   background-color: var(--color-bg-alt);
+  /* The orbiting cards may swing out past the portrait panel, but not past the
+     page's sides (no horizontal scroll). */
+  overflow-x: clip;
+}
+
+/* Same 12 columns and page margins as the rest of the page: text on the left,
+   the portrait on the right half. */
+.inner {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--grid-size);
+  align-items: start;
+  max-width: 120rem;
+  margin-inline: auto;
+}
+
+.text {
+  grid-column: 1 / 7;
 }
 
 .heading {
   font-size: clamp(2rem, 5vw, 3rem);
+}
+
+.portrait {
+  grid-column: 7 / -1;
+}
+
+@media (max-width: 1024px) {
+  .text,
+  .portrait {
+    grid-column: 1 / -1;
+  }
+
+  .portrait {
+    width: min(100%, 28rem);
+    margin: var(--space-6) auto 0;
+  }
 }

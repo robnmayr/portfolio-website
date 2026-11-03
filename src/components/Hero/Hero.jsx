@@ -1,18 +1,33 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
-import DitherReveal from '@/components/originkit/ui/dither-reveal'
+import { SplitText } from 'gsap/SplitText'
+import DitherVeil from '@/components/reactbits/DitherVeil'
+import { LedName } from './LedName'
+import { StrokeName } from './StrokeName'
 import { useLanguage } from '../../context/LanguageContext'
 import { useTheme } from '../../context/ThemeContext'
 import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion'
 import { scrollToSection } from '../../lib/scrollToSection'
+import { readAccent, readInk } from '../../lib/ditherInk'
+import { drift } from '../../lib/drift'
 import humanHandImage from '../../assets/images/hero/hand-human-clean.png'
 import robotHandImage from '../../assets/images/hero/hand-robot-clean.png'
 import styles from './Hero.module.css'
 
+gsap.registerPlugin(SplitText)
+
 const NAME = 'Robin Mayer'
+
+// How the name is drawn: 'stroke' = the giant two-line condensed type, traced as
+// an outline that then fills (React Bits StrokeText); 'classic' = the same type
+// rising out of masks; 'led' = scrolling pixel LED ticker (OriginKit), tilted
+// like the hands. All versions are kept, so switching is just changing this.
+const NAME_DISPLAY = 'stroke'
 
 // Tilt of the hands (as one group) in degrees (negative = counter-clockwise).
 const HANDS_ROTATION = -10
+// Tilt of the LED name band: 5 degrees steeper than the hands.
+const LED_ROTATION = HANDS_ROTATION - 5
 
 // Pixel sizes of the two source images (same height, so they sit side by side
 // as one composition). Used for the aspect ratios and the width split.
@@ -30,22 +45,6 @@ const BASE_SCALE = 1 / (1 + 2 * CANVAS_PAD)
 // Phones/tablets have no hover, so the cursor-driven reveal never fires there.
 const NO_HOVER_QUERY = '(hover: none)'
 
-function hexToRgb(hex) {
-  const value = parseInt(hex.trim().replace('#', ''), 16)
-  return [(value >> 16) & 255, (value >> 8) & 255, value & 255].map((c) => c / 255)
-}
-
-// The dither mixes between two inks: dark parts of the image get the text
-// color, bright parts get the page background. In dark mode that makes the
-// dither a negative (dark image areas light, bright areas dark).
-function readInk() {
-  const computed = getComputedStyle(document.documentElement)
-  return {
-    low: hexToRgb(computed.getPropertyValue('--color-text')),
-    high: hexToRgb(computed.getPropertyValue('--color-bg')),
-  }
-}
-
 const canvasPadStyle = { inset: `${-CANVAS_PAD * 100}%` }
 
 function handStyle({ width, height }) {
@@ -53,7 +52,7 @@ function handStyle({ width, height }) {
 }
 
 export function Hero() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const { theme } = useTheme()
   const prefersReducedMotion = usePrefersReducedMotion()
 
@@ -62,6 +61,10 @@ export function Hero() {
   const robotRef = useRef(null)
   const hintRef = useRef(null)
   const arrowRef = useRef(null)
+  const introRef = useRef(null)
+  // The intro paragraph's reveal plays once; later re-splits (language switch,
+  // resize) only re-wrap the lines without replaying it.
+  const introPlayedRef = useRef(false)
   // Live image transforms read by each dither canvas every frame (see the
   // DitherMotion note in dither-reveal.tsx); tweened by GSAP below.
   const humanMotion = useRef({ x: 0, y: 0, scale: BASE_SCALE, rotate: 0 })
@@ -71,14 +74,14 @@ export function Hero() {
   const humanPointer = useRef({ x: 0.5, y: 0.5, active: false })
   const robotPointer = useRef({ x: 0.5, y: 0.5, active: false })
 
-  const [ink, setInk] = useState({ low: [0, 0, 0], high: [1, 1, 1] })
+  const [ink, setInk] = useState({ low: [0, 0, 0], high: [1, 1, 1], accent: [1, 0.4, 0] })
   const [isTouch, setIsTouch] = useState(() => window.matchMedia(NO_HOVER_QUERY).matches)
 
   // Passive effect on purpose: ThemeProvider flips data-theme in a layout
   // effect, which runs after this component's own layout effects but before
   // any passive effect, so the CSS variables read here are already the new ones.
   useEffect(() => {
-    setInk(readInk())
+    setInk({ ...readInk(), accent: readAccent() })
   }, [theme])
 
   useEffect(() => {
@@ -95,11 +98,17 @@ export function Hero() {
     if (prefersReducedMotion) return undefined
 
     const ctx = gsap.context(() => {
-      // Name letters rise in, the hands slide in from opposite sides, then the
-      // scroll hint fades up.
-      gsap
-        .timeline({ defaults: { ease: 'power4.out' } })
-        .from('[data-hero-char]', { yPercent: 115, duration: 1.1, stagger: 0.05 })
+      // The two name lines rise out of their masks one after the other, the
+      // hands slide in from opposite sides, then the scroll hint fades up. (The
+      // intro paragraph has its own reveal in the effect below.)
+      const timeline = gsap.timeline({ defaults: { ease: 'power4.out' } })
+      if (NAME_DISPLAY === 'led') {
+        // The tilted LED band is wiped in along its own axis.
+        timeline.from('[data-hero-led]', { clipPath: 'inset(0 100% 0 0)', duration: 1.6 })
+      } else if (NAME_DISPLAY === 'classic') {
+        timeline.from('[data-hero-line]', { yPercent: 105, duration: 1.3, stagger: 0.14 })
+      }
+      timeline
         .from(
           humanRef.current,
           { xPercent: -120, duration: 1.7, ease: 'power3.out' },
@@ -112,22 +121,8 @@ export function Hero() {
         )
         .from(hintRef.current, { autoAlpha: 0, y: 16, duration: 0.9 }, '-=0.9')
 
-      // Each hand's picture drifts slowly *inside* its dither canvas (shifting,
-      // tilting and swelling a little), every property on its own cycle and the
-      // two hands out of sync. The dither grid stays put, so the pattern
-      // visibly shimmers as the image moves under it, like a wave.
-      const drift = (motion, ranges) => {
-        Object.entries(ranges).forEach(([property, [from, to, duration]]) => {
-          motion[property] = from
-          gsap.to(motion, {
-            [property]: to,
-            duration,
-            ease: 'sine.inOut',
-            repeat: -1,
-            yoyo: true,
-          })
-        })
-      }
+      // Each hand's picture drifts slowly *inside* its dither canvas, the two
+      // hands out of sync (see lib/drift.js).
       // property: [from, to, seconds per half-cycle]; x/y are fractions of the
       // canvas size, rotate is degrees.
       drift(humanMotion.current, {
@@ -155,6 +150,49 @@ export function Hero() {
 
     return () => ctx.revert()
   }, [prefersReducedMotion])
+
+  // Intro paragraph reveal: split into lines, each line slides up out of its own
+  // mask, after the name and hands have started moving. The split waits for the
+  // web font (line breaks depend on it) and the text stays hidden until then, so
+  // there is no flash of unsplit text. Re-runs when the language changes; only
+  // the first run animates.
+  useLayoutEffect(() => {
+    const el = introRef.current
+    if (!el || prefersReducedMotion) return undefined
+
+    el.style.visibility = 'hidden'
+    let cancelled = false
+    let ctx
+
+    document.fonts.ready.then(() => {
+      if (cancelled) return
+      ctx = gsap.context(() => {
+        SplitText.create(el, {
+          type: 'lines',
+          mask: 'lines',
+          autoSplit: true,
+          onSplit(split) {
+            el.style.visibility = 'visible'
+            if (introPlayedRef.current) return undefined
+            introPlayedRef.current = true
+            return gsap.from(split.lines, {
+              yPercent: 110,
+              duration: 1.3,
+              ease: 'power4.out',
+              stagger: 0.12,
+              delay: 1,
+            })
+          },
+        })
+      }, el)
+    })
+
+    return () => {
+      cancelled = true
+      ctx?.revert()
+      el.style.visibility = ''
+    }
+  }, [t.hero.intro, prefersReducedMotion])
 
   // Pointer for the dither canvases. Each hand is its own canvas, so the hero
   // tracks the cursor itself (one position in screen coordinates, shared by
@@ -267,31 +305,44 @@ export function Hero() {
     }
   }, [isTouch, prefersReducedMotion])
 
+  // DitherVeil (React Bits): ordered Bayer dither in the text/background colors
+  // (a negative in dark mode) and the colour trail lingering for 0.8 seconds
+  // behind the cursor. The accent rim on the dissolving edge is off (rim: 0);
+  // raise it (e.g. 0.2) to bring it back.
   const ditherProps = {
-    wave: false,
-    ditherStyle: 'bayer8',
-    dotSize: 4,
-    revealRadius: isTouch ? 90 : 130,
-    revealSoftness: 50,
-    inkLow: ink.low,
-    inkHigh: ink.high,
+    pattern: 'bayer',
+    pixelSize: 2,
+    levels: 3,
+    clickBurst: false,
+    inkColor: ink.low,
+    paperColor: ink.high,
+    rimColor: ink.accent,
+    rim: 0,
+    revealRadius: 85,
+    softness: 0.8,
+    linger: 0.8,
   }
 
   return (
     <section id="hero" ref={rootRef} className={styles.hero} aria-label="Hero">
-      <h1 className={styles.name} aria-label={NAME}>
-        {NAME.split(' ').map((word) => (
-          <span key={word} className={styles.word} aria-hidden="true">
-            {[...word].map((char, index) => (
-              <span key={index} className={styles.charMask}>
-                <span data-hero-char className={styles.char}>
-                  {char}
-                </span>
+      {NAME_DISPLAY === 'stroke' && <StrokeName name={NAME} accent={ink.accent} />}
+      {NAME_DISPLAY === 'led' && (
+        <>
+          <h1 className={styles.srOnly}>{NAME}</h1>
+          <LedName name={NAME} rotation={LED_ROTATION} ink={ink} />
+        </>
+      )}
+      {NAME_DISPLAY === 'classic' && (
+        <h1 className={styles.name} aria-label={NAME}>
+          {NAME.split(' ').map((word) => (
+            <span key={word} className={styles.lineMask} aria-hidden="true">
+              <span data-hero-line className={styles.line}>
+                {word}
               </span>
-            ))}
-          </span>
-        ))}
-      </h1>
+            </span>
+          ))}
+        </h1>
+      )}
 
       <div
         className={styles.hands}
@@ -301,8 +352,8 @@ export function Hero() {
       >
         <div ref={humanRef} className={styles.hand} style={handStyle(HUMAN_HAND)}>
           <div className={styles.canvasPad} style={canvasPadStyle}>
-            <DitherReveal
-              image={{ src: HUMAN_HAND.src }}
+            <DitherVeil
+              src={HUMAN_HAND.src}
               motion={humanMotion}
               pointer={humanPointer}
               {...ditherProps}
@@ -311,8 +362,8 @@ export function Hero() {
         </div>
         <div ref={robotRef} className={styles.hand} style={handStyle(ROBOT_HAND)}>
           <div className={styles.canvasPad} style={canvasPadStyle}>
-            <DitherReveal
-              image={{ src: ROBOT_HAND.src }}
+            <DitherVeil
+              src={ROBOT_HAND.src}
               motion={robotMotion}
               pointer={robotPointer}
               {...ditherProps}
@@ -320,6 +371,13 @@ export function Hero() {
           </div>
         </div>
       </div>
+
+      {/* keyed by language: SplitText replaces this paragraph's text nodes, so a
+          fresh element per language keeps React's text update from hitting a
+          detached node. */}
+      <p key={language} ref={introRef} className={styles.intro}>
+        {t.hero.intro}
+      </p>
 
       <button
         ref={hintRef}

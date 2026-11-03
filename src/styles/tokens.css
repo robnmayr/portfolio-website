@@ -10,6 +10,21 @@
   --color-text: #161616;
   --color-accent: #fc6510;
 
+  /* Size of one cell of the dot-grid background (global.css). Layout that
+     should line up with the dots is specified in whole cells of this. */
+  --grid-size: 24px;
+
+  /* The dot grid itself. Sections with their own background re-apply it (with
+     background-attachment: fixed, like the body) so the dots stay continuous. */
+  --dot-pattern: radial-gradient(
+    color-mix(in srgb, var(--color-text) 12%, transparent) 1px,
+    transparent 1px
+  );
+
+  /* Left/right page margin, in whole grid cells: 6 on desktop, fewer on
+     smaller screens. Hero and About line their content up on it. */
+  --page-inset: calc(var(--grid-size) * 6);
+
   /* Sticky header height — kept as a token so anchor-scroll offsets
      (scroll-margin-top on sections) stay in sync with the real header. */
   --header-height: 68px;
@@ -17,8 +32,9 @@
   /* Fonts */
   --font-display: 'Exo 2 Variable', 'Exo 2', sans-serif;
   --font-body: 'Work Sans', sans-serif;
-  /* Big, blocky name in the hero. */
-  --font-name: 'Anton', Impact, 'Arial Black', sans-serif;
+  /* Big condensed name in the hero. Barlow Condensed is the free, DIN-style
+     stand-in for DIN Condensed (which is licensed and not on every device). */
+  --font-name: 'Barlow Condensed', 'DIN Condensed', 'Arial Narrow', sans-serif;
   /* TODO: swap to OffBit Dot Bold once Robin owns the licensed font file,
      self-host via @font-face in src/styles/fonts.css */
   --font-accent: 'Silkscreen', monospace;
@@ -39,6 +55,18 @@
   /* --breakpoint-md: 768px */
   /* --breakpoint-lg: 1024px */
   /* --breakpoint-xl: 1280px */
+}
+
+@media (max-width: 1024px) {
+  :root {
+    --page-inset: calc(var(--grid-size) * 3);
+  }
+}
+
+@media (max-width: 540px) {
+  :root {
+    --page-inset: var(--grid-size);
+  }
 }
 
 [data-theme='dark'] {

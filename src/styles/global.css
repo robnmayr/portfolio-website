@@ -21,15 +21,6 @@ body {
   margin: 0;
   min-height: 100vh;
   background-color: var(--color-bg);
-  /* Dot-pattern texture, as body's own background-image layered over its
-     background-color. background-attachment: fixed keeps it pinned to the
-     viewport while content scrolls, rather than scrolling along with it. */
-  background-image: radial-gradient(
-    color-mix(in srgb, var(--color-text) 12%, transparent) 1px,
-    transparent 1px
-  );
-  background-size: 24px 24px;
-  background-attachment: fixed;
   color: var(--color-text);
   font-family: var(--font-body);
   line-height: 1.5;
@@ -76,9 +67,21 @@ button {
   border: none;
 }
 
+/* The page background (color + dot-pattern texture) lives on #root, not on body.
+   The header blends with `difference` against whatever is behind it, and Safari
+   only blends against real elements in the same stacking context, not against
+   a background that body propagates to the canvas; with the background on #root
+   the header has something to blend with there too. #root is deliberately not
+   isolated and has no stacking context of its own, for the same reason.
+   background-attachment: fixed pins the dots to the viewport while content
+   scrolls, rather than scrolling along with it. */
 #root {
   position: relative;
-  isolation: isolate;
+  min-height: 100vh;
+  background-color: var(--color-bg);
+  background-image: var(--dot-pattern);
+  background-size: var(--grid-size) var(--grid-size);
+  background-attachment: fixed;
 }
 
 /* --------------------------------------------------------------------------

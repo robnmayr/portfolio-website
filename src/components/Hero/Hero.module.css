@@ -1,47 +1,118 @@
 .hero {
+  /* One screen under the sticky header (never shorter than 34rem). */
+  --hero-height: max(34rem, calc(100svh - var(--header-height)));
+  /* Name: 27% of the hero's height (1.5 x the original 18%), but never wider
+     than the screen allows: the longest word is about 2.4 em wide, so 2.5 em
+     must fit between the two insets (this is what limits it on phones). Set on
+     the dot grid: the block starts --name-rows cells from the top and
+     --hero-inset (whole grid cells) from the left edge of the screen. */
+  --name-size: min(
+    calc(var(--hero-height) * 0.27),
+    calc((100vw - var(--hero-inset) * 2) / 2.5)
+  );
+  --name-rows: 6;
+  --intro-rows: 6;
+  --hero-inset: var(--page-inset);
+
   position: relative;
-  /* Exactly one screen under the sticky header: the (oversized, mostly
-     transparent) image box is taken out of flow so it can't stretch the hero. */
-  height: calc(100svh - var(--header-height));
-  min-height: 34rem;
-  display: grid;
-  place-items: center;
+  /* The (oversized, mostly transparent) hands box is taken out of flow so it
+     can't stretch the hero. */
+  height: var(--hero-height);
   overflow: hidden;
-  padding: var(--space-6) var(--space-4) var(--space-8);
 }
 
-/* The image (z-index 2) is layered in front of the name (z-index 1). */
+/* Name, behind the hands (z-index 1; the hands are 2, the intro text 3).
+   Barlow Condensed Bold: ascent 1.0 em, descent 0.2 em, cap height 0.7 em.
+   line-height 0.782 em makes the gap between the two lines 0.082 em of the
+   font size (25px at 304px type), and puts the top of the capital letters
+   0.091 em below the top of the first line box. So `top` below lines the
+   capital tops up with the dot at --name-rows cells from the top of the screen
+   (the header is --header-height tall and the grid is anchored to the screen). */
 .name {
-  grid-area: 1 / 1;
+  position: absolute;
   z-index: 1;
+  top: calc(var(--grid-size) * var(--name-rows) - var(--header-height) - 0.091 * var(--name-size));
+  left: var(--hero-inset);
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  column-gap: 0.25em;
+  flex-direction: column;
+  align-items: flex-start;
   font-family: var(--font-name);
-  font-weight: 400;
-  font-size: clamp(4rem, 15.5vw, 15rem);
-  line-height: 0.95;
-  letter-spacing: 0.01em;
+  font-weight: 700;
+  font-size: var(--name-size);
+  line-height: 0.782;
   text-transform: uppercase;
-  text-align: center;
-  /* Sits above the vertical middle of the hero. */
-  translate: 0 -16svh;
 }
 
-.word {
-  display: inline-flex;
-}
-
-/* Clips each letter so it can slide up into view from below its own baseline. */
-.charMask {
-  display: inline-block;
+/* Clips each line so it can rise into view from below its own baseline. The
+   padding gives the capitals room inside the clip; the equal negative margin
+   keeps the line spacing unchanged. */
+.lineMask {
+  display: block;
   overflow: hidden;
-  padding-top: 0.05em;
+  padding: 0.03em 0 0.04em;
+  margin: -0.03em 0 -0.04em;
 }
 
-.char {
-  display: inline-block;
+.line {
+  display: block;
+}
+
+/* Stroke-drawn version of the name (see StrokeName.jsx): each word is a line box
+   with the classic 0.782 em pitch. StrokeText's SVG is wider and taller than the
+   letters (padding of 0.1 em on every side, and the font's full ascent above the
+   capitals), so it is placed absolutely: --stroke-top lines the capitals up with
+   where the classic line draws them. */
+.strokeLine {
+  --stroke-top: -0.309em;
+
+  position: relative;
+  display: block;
+  height: 0.782em;
+}
+
+.strokeLine :global(.stroke-text) {
+  position: absolute;
+  top: var(--stroke-top);
+  left: -0.1em;
+  width: var(--stroke-text-width);
+}
+
+/* LED ticker version of the name (see LedName.jsx): a tilted band across the
+   upper part of the hero, above the hands. Size and tilt are set inline. */
+.led {
+  position: absolute;
+  z-index: 1;
+  top: 30%;
+  left: 50%;
+  translate: -50% -50%;
+  pointer-events: none;
+}
+
+/* The real heading when the name is drawn on a canvas. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Intro paragraph, bottom right and in front of the hands (z-index 3), so the
+   fingertips drift underneath it. It sits on the same grid margins as the name
+   (--hero-inset from the right edge, --intro-rows cells from the bottom) and
+   mirrors it across the diagonal of the hands. Placeholder copy; position and
+   size are meant to be tweaked. */
+.intro {
+  position: absolute;
+  z-index: 3;
+  right: var(--hero-inset);
+  bottom: calc(var(--grid-size) * var(--intro-rows));
+  width: min(26rem, calc(100% - var(--hero-inset) * 2));
+  font-family: var(--font-body);
+  font-size: clamp(1rem, 0.5rem + 0.9vw, 1.375rem);
+  line-height: 1.45;
+  text-wrap: pretty;
 }
 
 /* The two hands sit side by side in one tilted group. Wider than the hero on
@@ -122,9 +193,9 @@
 }
 
 @media (max-width: 768px) {
-  .name {
-    font-size: clamp(3.5rem, 19vw, 7rem);
-    translate: 0 -12svh;
+  .hero {
+    --name-rows: 4;
+    --intro-rows: 4;
   }
 
   .hands {

@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { HomeIcon, UserIcon, Squares2X2Icon } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '../../context/LanguageContext'
 import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion'
 import { scrollToSection } from '../../lib/scrollToSection'
+import homeIcon from '../../assets/icons/home.svg'
+import userIcon from '../../assets/icons/user.svg'
+import briefcaseIcon from '../../assets/icons/briefcase.svg'
 import styles from './SectionNav.module.css'
 
+// Pixelarticons (MIT, Gerrit Halfmann): home, user, briefcase.
 const SECTIONS = [
-  { id: 'hero', icon: HomeIcon },
-  { id: 'about', icon: UserIcon },
-  { id: 'projects', icon: Squares2X2Icon },
+  { id: 'hero', icon: homeIcon },
+  { id: 'about', icon: userIcon },
+  { id: 'projects', icon: briefcaseIcon },
 ]
 
 // Adapted from the Watermelon UI "Step Indicator" (ui.watermelon.sh,
@@ -123,7 +126,13 @@ export function SectionNav() {
                   transition={{ duration: prefersReducedMotion ? 0 : 0.4 }}
                 >
                   <span className={styles.tooltipIconWrap}>
-                    <step.icon className={styles.tooltipIcon} />
+                    <span
+                      className={styles.tooltipIcon}
+                      // Quoted: Vite inlines small SVGs as data URLs that contain
+                      // quote characters, which break an unquoted url().
+                      style={{ '--icon': `url("${step.icon}")` }}
+                      aria-hidden="true"
+                    />
                   </span>
                   <span className={styles.tooltipLabel}>{step.label}</span>
                 </motion.div>

@@ -2,6 +2,19 @@
   position: sticky;
   top: 0;
   z-index: 100;
+  /* Everything in the header (logo, nav pills and their tooltips, theme and
+     language buttons) is drawn in white and blended with `difference`, which
+     inverts whatever is behind it: dark on the light page, light on the dark
+     page, and legible on the images and the orange too. The header's own colors
+     are re-pointed below so the children keep using the usual tokens: white
+     ink, black for the tooltip label (difference with black leaves the page
+     showing through, so the label reads as a cut-out of the inverted bubble),
+     a translucent white for hover backgrounds, and white focus outlines. */
+  mix-blend-mode: difference;
+  --color-text: #fff;
+  --color-bg: #000;
+  --color-bg-alt: rgb(255 255 255 / 0.22);
+  --color-accent: #fff;
 }
 
 .bar {

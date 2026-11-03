@@ -1,0 +1,48 @@
+/* The 4:5 frame the portrait sits in. The canvas is larger than the frame (by
+   --canvas-margin of its size on every side) so the orbiting cards can swing out
+   past its edges. The accent panel, the head picture and the cards are all drawn
+   on that canvas; .panel is only an invisible box that marks where the panel is
+   (its position and corner radius are read from it). */
+.frame {
+  position: relative;
+  width: 100%;
+  margin: 0;
+  aspect-ratio: 4 / 5;
+  /* One cell of the page's dot grid. The head picture is clipped to this radius
+     too (OrbitPortrait.jsx reads it from the panel). */
+  --panel-radius: var(--grid-size);
+}
+
+.panel {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--panel-radius);
+}
+
+.canvas {
+  position: absolute;
+  inset: calc(var(--canvas-margin) * -1);
+  width: calc(100% + var(--canvas-margin) * 2);
+  height: calc(100% + var(--canvas-margin) * 2);
+  /* The global media reset caps canvases at 100% of their parent. */
+  max-width: none;
+  pointer-events: none;
+}
+
+/* Covers the panel; the cursor component inside it fills it. */
+.cursorLayer {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--panel-radius);
+}
+
+/* The text in the cursor's label pill (the pill itself is the component's). */
+.cursorLabel {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.1;
+  white-space: nowrap;
+  color: #161616;
+}

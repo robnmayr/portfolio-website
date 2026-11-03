@@ -44,7 +44,9 @@
   left: 50%;
   transform: translateX(-50%);
   margin-top: var(--space-2);
-  padding: var(--space-2) var(--space-4);
+  /* 1.2px less than --space-4 per side keeps the bubble as wide as it was with
+     the old 17.6px icon (see .tooltipIconWrap). */
+  padding: var(--space-2) calc(var(--space-4) - 1.2px);
   background-color: var(--color-text);
   border-radius: 999px;
   white-space: nowrap;
@@ -60,22 +62,39 @@
   gap: var(--space-2);
 }
 
-/* The icon's size lives on this wrapping span, not the <svg> itself: Safari
-   has been observed to not count an <svg> child's own width/height toward
-   its flex parent's auto-width calculation (a replaced-element quirk),
-   silently shrinking the bubble and eating into the padding on one side.
-   A plain span is a normal box with no such quirk. */
+/* The icon's size lives on this wrapping span: Safari has been observed to
+   not count an <svg> child's own width/height toward its flex parent's
+   auto-width calculation (a replaced-element quirk), silently shrinking the
+   bubble and eating into the padding on one side. A plain span is a normal box
+   with no such quirk (the icon itself is now a mask on a span, see below).
+   24px = the Pixelarticons grid at 1x, so every pixel of the icon stays a whole
+   number of device pixels and crisp. */
 .tooltipIconWrap {
   display: inline-flex;
-  width: 1.1rem;
-  height: 1.1rem;
+  width: 24px;
+  height: 24px;
   flex-shrink: 0;
+  /* The pixel icons leave about 2px of empty space around the glyph inside
+     their 24px grid; pulling the box in by that much keeps the bubble's
+     padding and the gap to the label what they look like, and keeps the bubble
+     as tall as the label instead of the icon. */
+  margin: -2px;
 }
 
+/* Pixelarticons icon (url set inline as --icon), drawn as a mask so it takes
+   the tooltip's text color. */
 .tooltipIcon {
   width: 100%;
   height: 100%;
-  color: var(--color-bg);
+  background-color: var(--color-bg);
+  -webkit-mask-image: var(--icon);
+  mask-image: var(--icon);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
 .tooltipLabel {

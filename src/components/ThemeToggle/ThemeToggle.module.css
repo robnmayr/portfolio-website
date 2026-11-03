@@ -19,7 +19,28 @@
   outline-offset: 2px;
 }
 
+/* Pixelarticons "sun" / "moon" (MIT, Gerrit Halfmann), drawn as masks so they
+   take the text color (and, unlike the unicode ☀/☾ glyphs, stay monochrome on
+   iOS/macOS). 24px = the icon grid at 1x, so every pixel stays crisp. */
 .icon {
-  display: inline-flex;
-  line-height: 0;
+  display: block;
+  width: 24px;
+  height: 24px;
+  background-color: currentColor;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.sun {
+  -webkit-mask-image: url('../../assets/icons/sun.svg');
+  mask-image: url('../../assets/icons/sun.svg');
+}
+
+.moon {
+  -webkit-mask-image: url('../../assets/icons/moon.svg');
+  mask-image: url('../../assets/icons/moon.svg');
 }
