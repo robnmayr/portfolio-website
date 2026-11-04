@@ -1,9 +1,23 @@
 import { useEffect, useRef, useState } from 'react'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import UserCursor from '@/components/originkit/ui/usercursor'
 import { useLanguage } from '../../context/LanguageContext'
 import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion'
 import headSrc from '../../assets/images/about/head.webp'
+import {
+  DISSOLVE_SCROLL,
+  PORTRAIT_REVEAL,
+  PORTRAIT_SCROLL,
+  PRE_SCROLL,
+  RING_SCROLL,
+  RING_START_SCROLL,
+  SATURATE_SCROLL,
+  SHRINK_SCROLL,
+} from './portraitConfig'
 import styles from './OrbitPortrait.module.css'
+
+gsap.registerPlugin(ScrollTrigger)
 
 // The "thoughts" orbiting the head, in ring order (files are numbered).
 const THOUGHTS = Object.values(
@@ -42,6 +56,33 @@ const SPEED = 0.7 // revolutions run at this fraction of the original's speed
 const BOB_AMOUNT = 0.05
 const BOB_PERIODS = [4.6, 6.1, 5.2, 7.0, 3.9, 5.7, 6.6, 4.3, 5.0]
 
+// Scroll reveal. When the portrait scrolls into view the panel dithers in from
+// its bottom edge, the head dithers in outward from the face (both with an 8x8
+// Bayer pattern, like the hero's hands), then the ring opens: it grows out of
+// the head, the cards pop in one after another and the whole ring has a
+// revolution or so to unwind. Afterwards scrolling still stirs the ring a little.
+const REVEAL_CELL = 5 // css px per cell of the reveal's dither pattern
+const SWIRL = 0.45 // extra revolutions the ring unwinds while it opens
+const STIR = 0.3 // extra revolutions per second at full scroll speed (0 = off)
+const STIR_SPEED = 3000 // scroll speed, px per second, that counts as full
+// 'expand' reveal (see portraitConfig.js): the portrait first shows as a Bayer
+// dither of itself with cells of this many css pixels.
+const STAGE_DITHER_PIXEL = 2
+// The dithered head's intro: it slides up from below the stage; how long that
+// takes (seconds), like the hero's hands.
+const HEAD_INTRO_SECONDS = 1.7
+const HEAD_OUTRO_SECONDS = 1.0 // and how long it takes to slide out again
+// How far the ring has to be open (0..1) for the cursor label to change from
+// "That's me" to "What's on my mind": the point where the last picture starts
+// to appear, so all of them are there.
+const RING_LABEL_AT = 0.4
+// How large the head is at the start of the 'expand' reveal, as a fraction of
+// the stage's height (1 = it fills it from the bottom edge up).
+const EXPAND_HEAD_SCALE = 0.8
+const clamp01 = (value) => Math.min(1, Math.max(0, value))
+const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3)
+const easeOutBack = (t) => 1 + 2.70158 * Math.pow(t - 1, 3) + 1.70158 * Math.pow(t - 1, 2)
+
 // Layout, as fractions of the panel width (the panel is 4:5, see the CSS).
 const PORTRAIT_WIDTH = 0.96 // the head picture, bottom-aligned and centered
 // Ring center and size relative to the head picture (its own width/height).
@@ -49,9 +90,6 @@ const HEAD_X = 0.49 // eye line x, fraction of the picture width
 const HEAD_Y = 0.28 // ring center y, fraction of the picture height
 const RING_RADIUS = 0.43 // semi-major axis, fraction of the picture width
 const CARD_SIZE = 0.52 // card side, fraction of the ring's semi-major axis (bigger = smaller gaps)
-// The canvas is larger than the panel by this fraction on every side, so the
-// cards can swing out past the panel's edges.
-const CANVAS_MARGIN = 0.3
 const HALF_CARD = CARD_SIZE / 2
 
 // Each card's texture is made at the size the card is drawn at (in device
@@ -118,16 +156,18 @@ const BAYER = (() => {
   return build(8).map((row) => row.map((value) => (value + 0.5) / 64))
 })()
 
-// Redraws `source` (a square texture of `size` pixels) as an ordered dither
+// Redraws `source` (an image of `width` x `height` pixels) as an ordered dither
 // with cells of `cell` pixels.
-function ditherTexture(source, size, cell) {
-  const grid = Math.max(1, Math.round(size / cell))
+function ditherTexture(source, width, height, cell) {
+  const columns = Math.max(1, Math.round(width / cell))
+  const rows = Math.max(1, Math.round(height / cell))
   const low = document.createElement('canvas')
-  low.width = low.height = grid
+  low.width = columns
+  low.height = rows
   const lowContext = low.getContext('2d')
   lowContext.imageSmoothingQuality = 'high'
-  lowContext.drawImage(source, 0, 0, grid, grid)
-  const pixels = lowContext.getImageData(0, 0, grid, grid)
+  lowContext.drawImage(source, 0, 0, columns, rows)
+  const pixels = lowContext.getImageData(0, 0, columns, rows)
   const data = pixels.data
   const steps = DITHER_LEVELS - 1
   const rgb = DITHER_PALETTE === 'rgb'
@@ -141,9 +181,9 @@ function ditherTexture(source, size, cell) {
     const base = Math.floor(scaled)
     return Math.min(steps, base + (scaled - base >= threshold ? 1 : 0)) / steps
   }
-  for (let y = 0; y < grid; y += 1) {
-    for (let x = 0; x < grid; x += 1) {
-      const i = (y * grid + x) * 4
+  for (let y = 0; y < rows; y += 1) {
+    for (let x = 0; x < columns; x += 1) {
+      const i = (y * columns + x) * 4
       if (data[i + 3] < 128) {
         data[i + 3] = 0
         continue
@@ -162,10 +202,11 @@ function ditherTexture(source, size, cell) {
   lowContext.putImageData(pixels, 0, 0)
 
   const result = document.createElement('canvas')
-  result.width = result.height = size
+  result.width = width
+  result.height = height
   const context = result.getContext('2d')
   context.imageSmoothingEnabled = false
-  context.drawImage(low, 0, 0, size, size)
+  context.drawImage(low, 0, 0, width, height)
   return result
 }
 
@@ -212,7 +253,7 @@ function makeTextures(image, size, cell) {
   frontContext.imageSmoothingQuality = 'high'
   frontContext.drawImage(image, 0, 0, size, size)
   setSaturation(frontContext, SATURATION, size)
-  if (cell > 0) front = ditherTexture(front, size, cell)
+  if (cell > 0) front = ditherTexture(front, size, size, cell)
 
   const back = document.createElement('canvas')
   back.width = back.height = size
@@ -233,6 +274,12 @@ export function OrbitPortrait() {
   const cursorLayerRef = useRef(null)
   // Which card (index into THOUGHTS) the pointer is over, or null.
   const [hovered, setHovered] = useState(null)
+  // Whether the ring of pictures has appeared (until then the cursor label says
+  // "That's me").
+  const [ringOpen, setRingOpen] = useState(false)
+  // Whether the portrait's opening dither has dissolved (the cursor label only
+  // shows from then on).
+  const [dissolved, setDissolved] = useState(false)
 
   useEffect(() => {
     const frame = frameRef.current
@@ -241,6 +288,11 @@ export function OrbitPortrait() {
     const cursorLayer = cursorLayerRef.current
     const context = canvas?.getContext('2d')
     if (!frame || !panel || !cursorLayer || !context) return undefined
+    const expandMode = PORTRAIT_REVEAL === 'expand'
+    // The scroll-pinned stage the canvas fills, and the tall track it sticks in
+    // (both from About.jsx).
+    const stage = canvas.closest('[data-portrait-stage]')
+    const track = stage?.parentElement
 
     let cancelled = false
     let head = null
@@ -268,6 +320,12 @@ export function OrbitPortrait() {
     let headMask = null
     let pointer = null // client coordinates, or null while it is outside
     let hoveredIndex = null
+    let ringOpenState = false
+    let dissolvedState = false
+    let canvasFilter = ''
+    let startLayers = null // the portrait as it is at the start of the 'expand' reveal: clean, and dithered
+    let cursorBoxKey = ''
+    let cssScale = 1 // CSS pixels per canvas pixel
 
     const layout = () => {
       dpr = Math.min(window.devicePixelRatio || 1, 2)
@@ -276,9 +334,11 @@ export function OrbitPortrait() {
       canvas.width = width
       canvas.height = height
       radiusPx = parseFloat(getComputedStyle(panel).borderTopLeftRadius) * dpr || 0
+      cursorBoxKey = ''
       accent = getComputedStyle(frame).getPropertyValue('--color-accent').trim() || accent
       const canvasRect = canvas.getBoundingClientRect()
       const panelRect = panel.getBoundingClientRect()
+      cssScale = canvasRect.width / width
       const scaleX = width / canvasRect.width
       const scaleY = height / canvasRect.height
       panelBox = {
@@ -292,7 +352,7 @@ export function OrbitPortrait() {
     // The texture size that matches a card at rest: the card side in device
     // pixels (head picture width x ring radius x card size).
     const restingCardSize = () => {
-      const panelWidth = width / (1 + 2 * CANVAS_MARGIN)
+      const panelWidth = panelBox.right - panelBox.left
       const side = panelWidth * PORTRAIT_WIDTH * RING_RADIUS * CARD_SIZE
       return Math.min(MAX_TEXTURE, Math.max(MIN_TEXTURE, Math.round(side)))
     }
@@ -303,33 +363,225 @@ export function OrbitPortrait() {
       cards = sources.map((image) => makeTextures(image, size, cell))
     }
 
+    // The scroll reveal's progress, each part from 0 (not there) to 1 (done);
+    // tweened by GSAP below. With reduced motion everything is simply there.
+    const intro = {
+      panel: prefersReducedMotion || expandMode ? 1 : 0,
+      head: prefersReducedMotion || expandMode ? 1 : 0,
+      ring: prefersReducedMotion ? 1 : 0,
+      // 'expand' reveal: the portrait starts as a grayscale dither of itself.
+      // saturation: 0 = gray, 1 = its colors; dissolve: 0 = dithered, 1 = clean.
+      saturation: prefersReducedMotion || !expandMode ? 1 : 0,
+      dissolve: prefersReducedMotion || !expandMode ? 1 : 0,
+      // The dithered head's own intro: 0 = still below the stage, 1 = in place
+      // (time based, played when the stage scrolls into view).
+      headIn: prefersReducedMotion || !expandMode ? 1 : 0,
+    }
+    // 'expand' reveal: how far through the pinned scroll we are, in screen
+    // heights (eased), and the frame's state: 0 = full-bleed over the whole
+    // stage, 1 = settled in place.
+    let scrolled = PORTRAIT_SCROLL
+    let settle = 1
+    const readScrolled = () => {
+      if (!expandMode || !stage || !track || getComputedStyle(stage).position !== 'sticky') {
+        return PORTRAIT_SCROLL
+      }
+      const rect = track.getBoundingClientRect()
+      return Math.min(PORTRAIT_SCROLL, Math.max(0, -rect.top / stage.offsetHeight))
+    }
+    const smooth = (t) => t * t * (3 - 2 * t)
+    const updateScroll = (dt) => {
+      if (!expandMode) return
+      const target = readScrolled()
+      scrolled = dt > 0 ? scrolled + (target - scrolled) * (1 - Math.exp(-dt / 0.1)) : target
+      intro.saturation = smooth(clamp01(scrolled / SATURATE_SCROLL))
+      intro.dissolve = clamp01((scrolled - SATURATE_SCROLL) / DISSOLVE_SCROLL)
+      settle = smooth(clamp01((scrolled - PRE_SCROLL) / SHRINK_SCROLL))
+      intro.ring = clamp01((scrolled - PRE_SCROLL - RING_START_SCROLL) / RING_SCROLL)
+      // The text next to the portrait fades in as the frame settles (About.module.css).
+      stage?.style.setProperty('--portrait-settle', String(settle))
+    }
+    let stir = 0 // extra revolutions per second, from scrolling
+    let lastScrollY = window.scrollY
+
+    // Offscreen layers for the parts that dither in, and the mask that does it.
+    const panelLayer = document.createElement('canvas')
+    const headLayer = document.createElement('canvas')
+    const maskCanvas = document.createElement('canvas')
+    let maskImage = null
+
+    // Draws `paint` so that only the cells of an ordered-dither pattern the
+    // reveal has reached by `progress` (0..1) show. `when(x, y)` is 0..1 and says
+    // when the reveal gets to a point; the Bayer threshold roughens that front.
+    const drawRevealed = (layer, progress, when, paint) => {
+      if (progress >= 1) {
+        paint(context)
+        return
+      }
+      if (progress <= 0) return
+      if (layer.width !== width || layer.height !== height) {
+        layer.width = width
+        layer.height = height
+      }
+      const layerContext = layer.getContext('2d')
+      layerContext.setTransform(1, 0, 0, 1, 0, 0)
+      layerContext.globalCompositeOperation = 'source-over'
+      layerContext.clearRect(0, 0, width, height)
+      paint(layerContext)
+
+      const cell = Math.max(2, Math.round(REVEAL_CELL * dpr))
+      const columns = Math.ceil(width / cell)
+      const rows = Math.ceil(height / cell)
+      if (!maskImage || maskImage.width !== columns || maskImage.height !== rows) {
+        maskCanvas.width = columns
+        maskCanvas.height = rows
+        maskImage = maskCanvas.getContext('2d').createImageData(columns, rows)
+      }
+      const pixels = maskImage.data
+      for (let y = 0; y < rows; y += 1) {
+        for (let x = 0; x < columns; x += 1) {
+          const threshold = when((x + 0.5) * cell, (y + 0.5) * cell) * 0.7 + BAYER[y % 8][x % 8] * 0.3
+          pixels[(y * columns + x) * 4 + 3] = progress * 1.001 >= threshold ? 255 : 0
+        }
+      }
+      maskCanvas.getContext('2d').putImageData(maskImage, 0, 0)
+
+      layerContext.globalCompositeOperation = 'destination-in'
+      layerContext.imageSmoothingEnabled = false
+      layerContext.drawImage(maskCanvas, 0, 0, columns * cell, rows * cell)
+      layerContext.globalCompositeOperation = 'source-over'
+      context.drawImage(layer, 0, 0)
+    }
+
+    // The portrait as it is at the start of the 'expand' reveal (frame = the whole
+    // stage, head large and standing on its bottom edge), once as it really is and
+    // once dithered, for the opening phases. Rebuilt whenever the stage changes.
+    const buildStartLayers = () => {
+      if (!expandMode || !head || width < 2 || height < 2) return
+      const panelWidth = panelBox.right - panelBox.left
+      const headWidth = panelWidth * PORTRAIT_WIDTH
+      const headHeight = (headWidth * head.naturalHeight) / head.naturalWidth
+      const headLeft = panelBox.left + (panelWidth - headWidth) / 2
+      const headTop = panelBox.bottom + 2 * dpr - headHeight
+      const anchorX = (panelBox.left + panelBox.right) / 2
+      const scale = (height / headHeight) * EXPAND_HEAD_SCALE
+      const paintHead = (ctx) => {
+        ctx.imageSmoothingQuality = 'high'
+        ctx.setTransform(scale, 0, 0, scale, width / 2 - anchorX * scale, height - panelBox.bottom * scale)
+        ctx.drawImage(head, headLeft, headTop, headWidth, headHeight)
+      }
+      // The head alone (transparent around it), for the dither: in the gray
+      // opening phase the orange is not there yet, so the page's dot pattern
+      // shows around the dithered head.
+      const headOnly = document.createElement('canvas')
+      headOnly.width = width
+      headOnly.height = height
+      paintHead(headOnly.getContext('2d'))
+      // The clean portrait, orange and all, that takes over from the dither.
+      const clean = document.createElement('canvas')
+      clean.width = width
+      clean.height = height
+      const cleanContext = clean.getContext('2d')
+      cleanContext.fillStyle = accent
+      cleanContext.fillRect(0, 0, width, height)
+      paintHead(cleanContext)
+      const cell = Math.max(2, Math.round(STAGE_DITHER_PIXEL * dpr))
+      startLayers = { clean, dithered: ditherTexture(headOnly, width, height, cell) }
+    }
+
     const render = () => {
       context.setTransform(1, 0, 0, 1, 0, 0)
       context.clearRect(0, 0, width, height)
+
+      // The colors come in by scroll: a CSS grayscale on the canvas (the canvas'
+      // own filter is not available in Safari).
+      const filter = intro.saturation >= 1 ? '' : `grayscale(${(1 - intro.saturation).toFixed(3)})`
+      if (filter !== canvasFilter) {
+        canvasFilter = filter
+        canvas.style.filter = filter
+      }
+
+      // 'expand' reveal, opening phases: the dithered head (on the page's dot
+      // pattern, the orange fading in with the colors), which the clean portrait
+      // takes over from the face outward (a Bayer pattern again) as you scroll.
+      if (expandMode && intro.dissolve < 1) {
+        hits = []
+        if (!startLayers) return
+        // The orange comes in with the colors; until then the page shows through.
+        context.globalAlpha = intro.saturation
+        context.fillStyle = accent
+        context.fillRect(0, 0, width, height)
+        context.globalAlpha = 1
+        // The dithered head slides up into place from below the stage (its intro,
+        // see headTrigger below), like the hero's hands slide in.
+        const rise = (1 - intro.headIn) * (1 - intro.dissolve) * height
+        context.drawImage(startLayers.dithered, 0, rise)
+        drawRevealed(
+          panelLayer,
+          intro.dissolve,
+          (x, y) => clamp01(Math.hypot(x - width * 0.5, y - height * 0.4) / (Math.hypot(width, height) * 0.5)),
+          (ctx) => ctx.drawImage(startLayers.clean, 0, 0),
+        )
+        return
+      }
 
       // The panel itself is drawn here, on the canvas, together with the head
       // (not as a CSS box under it): two separately rendered layers can disagree
       // by a pixel about where the panel ends (Safari showed a sliver of orange
       // under the head), while one drawing has no such seam.
       const { left: panelLeft, top: panelTop, right: panelRight, bottom: panelBottom } = panelBox
-      const tracePanel = () => {
-        const r = radiusPx
-        context.beginPath()
-        context.moveTo(panelLeft + r, panelTop)
-        context.lineTo(panelRight - r, panelTop)
-        context.arcTo(panelRight, panelTop, panelRight, panelTop + r, r)
-        context.lineTo(panelRight, panelBottom - r)
-        context.arcTo(panelRight, panelBottom, panelRight - r, panelBottom, r)
-        context.lineTo(panelLeft + r, panelBottom)
-        context.arcTo(panelLeft, panelBottom, panelLeft, panelBottom - r, r)
-        context.lineTo(panelLeft, panelTop + r)
-        context.arcTo(panelLeft, panelTop, panelLeft + r, panelTop, r)
-        context.closePath()
+      // 'expand' reveal: until it has settled, the frame is bigger than the panel's
+      // place, the whole stage at first, and shrinks into it (its corners round
+      // off on the way).
+      const expanding = expandMode && settle < 1
+      const mix = (from, to) => from + (to - from) * settle
+      const frame = expanding
+        ? {
+            left: mix(0, panelLeft),
+            top: mix(0, panelTop),
+            right: mix(width, panelRight),
+            bottom: mix(height, panelBottom),
+            radius: radiusPx * settle,
+          }
+        : { left: panelLeft, top: panelTop, right: panelRight, bottom: panelBottom, radius: radiusPx }
+      // The cursor label's area follows the frame as it shrinks into place.
+      const boxKey = [frame.left, frame.top, frame.right, frame.bottom, frame.radius].map(Math.round).join()
+      if (boxKey !== cursorBoxKey) {
+        cursorBoxKey = boxKey
+        const box = cursorLayer.style
+        box.left = `${frame.left * cssScale}px`
+        box.top = `${frame.top * cssScale}px`
+        box.width = `${(frame.right - frame.left) * cssScale}px`
+        box.height = `${(frame.bottom - frame.top) * cssScale}px`
+        box.borderRadius = `${frame.radius * cssScale}px`
       }
-      context.fillStyle = accent
-      tracePanel()
-      context.fill()
+      const tracePanel = (ctx) => {
+        const { left, top, right, bottom, radius: r } = frame
+        ctx.beginPath()
+        ctx.moveTo(left + r, top)
+        ctx.lineTo(right - r, top)
+        ctx.arcTo(right, top, right, top + r, r)
+        ctx.lineTo(right, bottom - r)
+        ctx.arcTo(right, bottom, right - r, bottom, r)
+        ctx.lineTo(left + r, bottom)
+        ctx.arcTo(left, bottom, left, bottom - r, r)
+        ctx.lineTo(left, top + r)
+        ctx.arcTo(left, top, left + r, top, r)
+        ctx.closePath()
+      }
       hits = []
+
+      // The panel dithers in from its bottom edge upward.
+      drawRevealed(
+        panelLayer,
+        intro.panel,
+        (x, y) => clamp01((panelBottom - y) / (panelBottom - panelTop)),
+        (ctx) => {
+          ctx.fillStyle = accent
+          tracePanel(ctx)
+          ctx.fill()
+        },
+      )
       if (!head) return
 
       // The head picture is bottom aligned on the panel.
@@ -341,18 +593,36 @@ export function OrbitPortrait() {
       // panel's edge, so no sliver of the panel's color can show under it.
       const headTop = panelBottom + 2 * dpr - headHeight
 
-      headBox = { left: headLeft, top: headTop, width: headWidth, height: headHeight }
+      // While the frame is still shrinking, the head (and the ring, which may
+      // already be opening) is shown larger and lower: a scale about the bottom
+      // middle of the panel's place, moved from the stage's bottom middle.
+      const anchorX = (panelLeft + panelRight) / 2
+      const viewScale = expanding ? mix((height / headHeight) * EXPAND_HEAD_SCALE, 1) : 1
+      const viewX = expanding ? mix(width / 2, anchorX) : anchorX
+      const viewY = expanding ? mix(height, panelBottom) : panelBottom
+      const toViewX = (x) => viewX + (x - anchorX) * viewScale
+      const toViewY = (y) => viewY + (y - panelBottom) * viewScale
 
-      const centerX = headLeft + headWidth * HEAD_X
-      const centerY = headTop + headHeight * HEAD_Y
-      const radius = headWidth * RING_RADIUS
+      headBox = {
+        left: toViewX(headLeft),
+        top: toViewY(headTop),
+        width: headWidth * viewScale,
+        height: headHeight * viewScale,
+      }
+
+      const centerX = toViewX(headLeft + headWidth * HEAD_X)
+      const centerY = toViewY(headTop + headHeight * HEAD_Y)
+      // The ring opens out of the head while it is revealed.
+      const ringScale = 0.2 + 0.8 * easeOutCubic(intro.ring)
+      const radius = headWidth * RING_RADIUS * ringScale * viewScale
 
       const project = (p) => {
         const k = (radius * RING.dist) / (RING.dist - p[2])
         return [centerX + k * p[0], centerY + k * p[1]]
       }
 
-      const spinAngle = spin * Math.PI * 2 * RING.direction
+      // The ring unwinds from a few extra revolutions as it opens.
+      const spinAngle = (spin + (1 - intro.ring) * (1 - intro.ring) * SWIRL) * Math.PI * 2 * RING.direction
       const list = cards.map((card, index) => {
         const psi = rad(RING.phase) - (index * 2 * Math.PI) / cards.length + spinAngle
         // How far the card is lifted along its own vertical axis, in ring
@@ -361,11 +631,14 @@ export function OrbitPortrait() {
         const bob = prefersReducedMotion
           ? 0
           : BOB_AMOUNT * Math.sin((clock * 2 * Math.PI) / cycle + index * 1.7)
-        return { card, index, psi, z: Math.sin(psi) * sinTilt, bob }
+        // Cards pop in one after another, with a little overshoot.
+        const grow = easeOutBack(clamp01((intro.ring - index * 0.05) / 0.6))
+        return { card, index, psi, z: Math.sin(psi) * sinTilt, bob, half: HALF_CARD * grow }
       })
       list.sort((a, b) => a.z - b.z)
 
-      const drawCard = ({ card, index, psi, z, bob }) => {
+      const drawCard = ({ card, index, psi, z, bob, half }) => {
+        if (half < 0.002) return
         const c = Math.cos(psi)
         const s = Math.sin(psi)
         // The card's own up is the ring's axis; the bob moves it along that.
@@ -376,8 +649,8 @@ export function OrbitPortrait() {
         ]
         const tangent = [-s * U[0] + c * V[0], -s * U[1] + c * V[1], -s * U[2] + c * V[2]]
         const p0 = project(center)
-        const pT = project(center.map((v, i) => v + tangent[i] * HALF_CARD))
-        const pA = project(center.map((v, i) => v + AXIS[i] * HALF_CARD))
+        const pT = project(center.map((v, i) => v + tangent[i] * half))
+        const pA = project(center.map((v, i) => v + AXIS[i] * half))
         // Picture x runs against the ring's direction of travel and picture y
         // down against the ring's axis, so the near side reads upright and the
         // far side (seen from behind) comes out mirrored.
@@ -397,12 +670,26 @@ export function OrbitPortrait() {
       // Far half of the ring, then the head, then the near half.
       let next = 0
       for (; next < list.length && list[next].z <= 0; next += 1) drawCard(list[next])
-      // The head is cut off by the panel's rounded bottom corners.
-      context.save()
-      tracePanel()
-      context.clip()
-      context.drawImage(head, headLeft, headTop, headWidth, headHeight)
-      context.restore()
+      // The head dithers in outward from the face, and is cut off by the panel's
+      // rounded bottom corners.
+      drawRevealed(
+        headLayer,
+        intro.head,
+        (x, y) =>
+          clamp01(Math.hypot(x - (headLeft + headWidth * 0.52), y - (headTop + headHeight * 0.38)) / (headWidth * 0.8)),
+        (ctx) => {
+          ctx.save()
+          tracePanel(ctx)
+          ctx.clip()
+          // The head is shown large at first, standing on the bottom edge of the
+          // stage, and settles into its place on the panel.
+          if (expanding) {
+            ctx.setTransform(viewScale, 0, 0, viewScale, viewX - anchorX * viewScale, viewY - panelBottom * viewScale)
+          }
+          ctx.drawImage(head, headLeft, headTop, headWidth, headHeight)
+          ctx.restore()
+        },
+      )
       for (; next < list.length; next += 1) drawCard(list[next])
     }
 
@@ -434,6 +721,19 @@ export function OrbitPortrait() {
       return null
     }
 
+    const syncRingOpen = () => {
+      const open = intro.ring >= RING_LABEL_AT
+      if (open !== ringOpenState) {
+        ringOpenState = open
+        setRingOpen(open)
+      }
+      const done = intro.dissolve >= 0.99
+      if (done !== dissolvedState) {
+        dissolvedState = done
+        setDissolved(done)
+      }
+    }
+
     const updateHovered = () => {
       const found = findHovered()
       if (found === hoveredIndex) return
@@ -457,8 +757,16 @@ export function OrbitPortrait() {
       const dt = last ? Math.min(0.05, (now - last) / 1000) : 0
       last = now
       clock += dt
-      spin = (spin + (dt * SPEED) / REVOLUTION_SECONDS) % 1
+      updateScroll(dt)
+      // Scrolling stirs the ring: its extra speed follows the scroll speed, eased.
+      const scrollY = window.scrollY
+      const scrollSpeed = dt > 0 ? (scrollY - lastScrollY) / dt : 0
+      lastScrollY = scrollY
+      const stirTarget = Math.max(-1, Math.min(1, scrollSpeed / STIR_SPEED)) * STIR
+      stir += (stirTarget - stir) * (1 - Math.exp(-dt / 0.3))
+      spin = (spin + (dt * SPEED) / REVOLUTION_SECONDS + dt * stir) % 1
       render()
+      syncRingOpen()
       updateHovered()
       if (visible) raf = requestAnimationFrame(tick)
     }
@@ -469,6 +777,49 @@ export function OrbitPortrait() {
       raf = requestAnimationFrame(tick)
     }
 
+    // The reveal plays once, when the portrait has scrolled into view and its
+    // pictures are loaded: the panel and the head dither in, then the ring opens.
+    let triggered = false
+    const timeline = gsap
+      .timeline({ paused: true })
+      .to(intro, { panel: 1, duration: 1.1, ease: 'power2.inOut' }, 0)
+      .to(intro, { head: 1, duration: 1.1, ease: 'power2.inOut' }, 0.35)
+      .to(intro, { ring: 1, duration: 1.8, ease: 'none' }, 1.0)
+    const playReveal = () => {
+      if (triggered && head && cards.length && !prefersReducedMotion) timeline.play()
+    }
+    const scrollTrigger = prefersReducedMotion || expandMode
+      ? null
+      : ScrollTrigger.create({
+          trigger: frame,
+          start: 'top 78%',
+          once: true,
+          onEnter: () => {
+            triggered = true
+            playReveal()
+          },
+        })
+
+    // The dithered head's intro plays when the stage has scrolled into view (also
+    // when you jump to it); once you are back above it, it slides out again.
+    let headTween = null
+    const headTrigger =
+      expandMode && !prefersReducedMotion && track
+        ? ScrollTrigger.create({
+            trigger: track,
+            start: 'top 55%',
+            onEnter: () => {
+              headTween?.kill()
+              headTween = gsap.to(intro, { headIn: 1, duration: HEAD_INTRO_SECONDS, ease: 'power3.out' })
+            },
+            // Scrolling back up: it slides out again, the way it came.
+            onLeaveBack: () => {
+              headTween?.kill()
+              headTween = gsap.to(intro, { headIn: 0, duration: HEAD_OUTRO_SECONDS, ease: 'power2.in' })
+            },
+          })
+        : null
+
     Promise.all([loadImage(headSrc), ...THOUGHTS.map(loadImage)]).then(([headImage, ...images]) => {
       if (cancelled) return
       head = headImage
@@ -476,12 +827,18 @@ export function OrbitPortrait() {
       sources = images.filter(Boolean)
       layout()
       rebuildCards()
+      buildStartLayers()
+      updateScroll(0)
       render()
+      syncRingOpen()
       start()
+      playReveal()
     })
 
     const resizeObserver = new ResizeObserver(() => {
       layout()
+      buildStartLayers()
+      updateScroll(0)
       // Textures are only remade when the card size has really changed.
       const built = cards[0]?.size
       if (built && Math.abs(restingCardSize() - built) > built * 0.08) rebuildCards()
@@ -497,6 +854,10 @@ export function OrbitPortrait() {
     return () => {
       cancelled = true
       cancelAnimationFrame(raf)
+      timeline.kill()
+      scrollTrigger?.kill()
+      headTween?.kill()
+      headTrigger?.kill()
       resizeObserver.disconnect()
       intersectionObserver.disconnect()
       cursorLayer.removeEventListener('pointermove', handlePointerMove)
@@ -504,18 +865,24 @@ export function OrbitPortrait() {
     }
   }, [prefersReducedMotion])
 
+  // "That's me" while the portrait is still shrinking into place and the ring is
+  // opening, then "What's on my mind" and, over a picture, that picture's label.
+  const label = !ringOpen
+    ? t.about.cursorIntro
+    : hovered === null
+      ? t.about.cursorIdle
+      : t.about.thoughts[hovered]
+
   return (
-    <figure
-      ref={frameRef}
-      className={styles.frame}
-      style={{ '--canvas-margin': `${CANVAS_MARGIN * 100}%` }}
-      role="img"
-      aria-label={t.about.portraitAlt}
-    >
-      <div ref={panelRef} className={styles.panel} />
+    <>
+      {/* The canvas fills the whole stage around the portrait (About.jsx), so the
+          expanding frame and the swinging cards can use all of it. */}
       <canvas ref={canvasRef} className={styles.canvas} aria-hidden="true" />
+      <figure ref={frameRef} className={styles.frame} role="img" aria-label={t.about.portraitAlt}>
+        <div ref={panelRef} className={styles.panel} />
+      </figure>
       {/* OriginKit "User Cursor", used only for its label: a pill that trails the
-          pointer over the panel and says what the pointer is over. The component's
+          pointer over the frame and says what the pointer is over. The component's
           own arrow is replaced by nothing and the normal pointer is shown again
           (the component hides it by default; `cursor: auto` below undoes that). */}
       <div ref={cursorLayerRef} className={styles.cursorLayer}>
@@ -523,12 +890,13 @@ export function OrbitPortrait() {
           color="#f6f6f6"
           textColor="#161616"
           arrow={<span />}
+          showLabel={dissolved}
           labelOffsetUseDefault={false}
           labelOffsetX={18}
           labelOffsetY={16}
           label={
             <span className={styles.cursorLabel}>
-              {hovered === null ? t.about.cursorIdle : t.about.thoughts[hovered]}
+              {label}
             </span>
           }
           style={{
@@ -541,6 +909,6 @@ export function OrbitPortrait() {
           }}
         />
       </div>
-    </figure>
+    </>
   )
 }

@@ -12,9 +12,9 @@
     "semantic_hash": "c8c6f2154fe912c2ed0f246ed4df0cee"
   },
   "src/components/About/About.jsx": {
-    "mtime": 1793725370.9647148,
-    "seen": 1793725424.589452,
-    "ast_hash": "190ab880b725a719fa1ea95bd24d6d26",
+    "mtime": 1793797883.4662473,
+    "seen": 1793797907.874062,
+    "ast_hash": "d88e16160951658c4094ae639afaa692",
     "semantic_hash": ""
   },
   "src/components/Footer/Footer.jsx": {
@@ -78,9 +78,9 @@
     "semantic_hash": "57608815d170593efe3a339f0e8c4067"
   },
   "src/i18n/dictionary.js": {
-    "mtime": 1793727431.243421,
-    "seen": 1793727463.893043,
-    "ast_hash": "3da3f776ae2178edbd6eeeadd05bc816",
+    "mtime": 1793797490.7721026,
+    "seen": 1793797521.292316,
+    "ast_hash": "929292e5b291d47fb95b535aa00fcda4",
     "semantic_hash": ""
   },
   "src/main.jsx": {
@@ -264,9 +264,9 @@
     "semantic_hash": ""
   },
   "src/components/About/OrbitPortrait.jsx": {
-    "mtime": 1793727657.1192796,
-    "seen": 1793727670.354059,
-    "ast_hash": "17dc9a45a80bc0578dd17cdc5037cb70",
+    "mtime": 1793800968.8285303,
+    "seen": 1793800982.9733791,
+    "ast_hash": "c3431786cee9ecdcda0d1300ba244bb4",
     "semantic_hash": ""
   },
   "src/assets/images/about/head.webp": {
@@ -333,6 +333,12 @@
     "mtime": 1793727339.291137,
     "seen": 1793727463.8930361,
     "ast_hash": "2ef2b47a716921e71dbf812b6602e222",
+    "semantic_hash": ""
+  },
+  "src/components/About/portraitConfig.js": {
+    "mtime": 1793798822.4038167,
+    "seen": 1793798833.844762,
+    "ast_hash": "dad08346b9502b915cb719ddae3f0fc8",
     "semantic_hash": ""
   },
   "package-lock.json": {

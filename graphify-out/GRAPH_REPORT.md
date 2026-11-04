@@ -1,17 +1,17 @@
-# Graph Report - portfolio-website  (2026-11-03)
+# Graph Report - portfolio-website  (2026-11-04)
 
 ## Corpus Check
-- 34 files · ~19,053 words
+- 35 files · ~21,642 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 21 file(s) not represented in the graph (top: .css 13, (none) 8)
 
 ## Summary
-- 265 nodes · 456 edges · 12 communities (11 shown, 1 thin omitted)
+- 277 nodes · 484 edges · 12 communities (11 shown, 1 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 8 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `269d7324`
+- Built from commit: `7449d566`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -24,16 +24,16 @@
 - OrbitPortrait.jsx
 - dither-reveal.tsx
 - deploy.yml
-- react
 - pixel-led-display.tsx
 - portfolio-website
 - CLAUDE.md
+- usercursor.tsx
 
 ## God Nodes (most connected - your core abstractions)
 1. `react` - 18 edges
 2. `useLanguage()` - 17 edges
-3. `Hero()` - 14 edges
-4. `OrbitPortrait()` - 11 edges
+3. `OrbitPortrait()` - 15 edges
+4. `Hero()` - 14 edges
 5. `usePrefersReducedMotion()` - 11 edges
 6. `AppShell()` - 9 edges
 7. `Header()` - 9 edges
@@ -50,8 +50,8 @@
   README.md → .github/workflows/deploy.yml
 - `404 Not Found Page` --references--> `index.html App Shell`  [EXTRACTED]
   public/404.html → index.html
-- `AppShell()` --calls--> `useLenis()`  [EXTRACTED]
-  src/App.jsx → src/hooks/useLenis.js
+- `AppShell()` --calls--> `About()`  [EXTRACTED]
+  src/App.jsx → src/components/About/About.jsx
 
 ## Import Cycles
 - None detected.
@@ -66,12 +66,12 @@ Cohesion: 0.11
 Nodes (22): gsap@^3.15.0, gsap, canvasPadStyle, handStyle(), HUMAN_HAND, ROBOT_HAND, StrokeName(), toRgb() (+14 more)
 
 ### Community 1 - "package.json"
-Cohesion: 0.06
-Nodes (44): dependencies, clsx@^2.1.1, @fontsource/barlow-condensed@^5.3.0, @fontsource/silkscreen@^5.3.0, @fontsource-variable/exo-2@^5.3.0, @fontsource/work-sans@^5.3.0, @heroicons/react@^2.2.0, lenis@^1.3.26 (+36 more)
+Cohesion: 0.05
+Nodes (47): dependencies, clsx@^2.1.1, @fontsource/barlow-condensed@^5.3.0, @fontsource/silkscreen@^5.3.0, @fontsource-variable/exo-2@^5.3.0, @fontsource/work-sans@^5.3.0, framer-motion@^14.9.0, @heroicons/react@^2.2.0 (+39 more)
 
 ### Community 2 - "Language & Site Chrome"
-Cohesion: 0.10
-Nodes (20): App(), AppShell(), About(), Footer(), Header(), handleLogoClick(), Hero(), LanguageToggle() (+12 more)
+Cohesion: 0.09
+Nodes (28): react, App(), AppShell(), Footer(), Header(), handleLogoClick(), Hero(), LanguageToggle() (+20 more)
 
 ### Community 3 - "steps"
 Cohesion: 0.12
@@ -83,7 +83,7 @@ Nodes (11): Deploy to GitHub Pages Workflow, index.html App Shell, 404 Not Found
 
 ### Community 5 - "OrbitPortrait.jsx"
 Cohesion: 0.09
-Nodes (29): framer-motion@^14.9.0, framer-motion, alphaMask(), axis, BAYER, BOB_PERIODS, ditherTexture(), INK (+21 more)
+Nodes (31): About(), alphaMask(), axis, BAYER, BOB_PERIODS, clamp01(), ditherTexture(), easeOutBack() (+23 more)
 
 ### Community 6 - "dither-reveal.tsx"
 Cohesion: 0.15
@@ -93,10 +93,6 @@ Nodes (12): clamp(), DEFAULTS, DITHER_INDEX, DitherMotion, DitherPointer, Dither
 Cohesion: 0.15
 Nodes (12): concurrency, cancel-in-progress, group, name, on, push, workflow_dispatch, permissions (+4 more)
 
-### Community 8 - "react"
-Cohesion: 0.19
-Nodes (10): react, ThemeToggle(), getStoredTheme(), getSystemTheme(), ThemeContext, ThemeProvider(), useTheme(), useLenis() (+2 more)
-
 ### Community 9 - "pixel-led-display.tsx"
 Cohesion: 0.12
 Nodes (22): LedName(), pitchForViewport(), toRgb(), buildColumns(), Direction, DotShape, EXTRA, flickerNoise() (+14 more)
@@ -104,6 +100,10 @@ Nodes (22): LedName(), pitchForViewport(), toRgb(), buildColumns(), Direction, D
 ### Community 10 - "portfolio-website"
 Cohesion: 0.40
 Nodes (4): Build, Local development, portfolio-website, Stack
+
+### Community 13 - "usercursor.tsx"
+Cohesion: 0.31
+Nodes (8): ClassNames, COMPONENT_DEFAULTS, CursorLayer(), __OriginkitBase_UserCursor(), __originkitPresetProps, Props, useIsStaticRenderer(), UserCursor()
 
 ## Knowledge Gaps
 - **5 isolated node(s):** `404 Not Found Page`, `CSS Modules`, `Design Tokens File (src/styles/tokens.css)`, `GSAP (animation library)`, `Lenis (smooth scroll library)`
@@ -113,17 +113,17 @@ Nodes (4): Build, Local development, portfolio-website, Stack
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `react` connect `react` to `Hero.jsx`, `package.json`, `Language & Site Chrome`, `OrbitPortrait.jsx`, `dither-reveal.tsx`, `pixel-led-display.tsx`?**
-  _High betweenness centrality (0.346) - this node is a cross-community bridge._
+- **Why does `react` connect `Language & Site Chrome` to `Hero.jsx`, `package.json`, `OrbitPortrait.jsx`, `dither-reveal.tsx`, `pixel-led-display.tsx`, `usercursor.tsx`?**
+  _High betweenness centrality (0.329) - this node is a cross-community bridge._
 - **What connects `404 Not Found Page`, `CSS Modules`, `Design Tokens File (src/styles/tokens.css)` to the rest of the system?**
   _5 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Hero.jsx` be split into smaller, more focused modules?**
   _Cohesion score 0.10752688172043011 - nodes in this community are weakly interconnected._
-- **Why does `dependencies` connect `package.json` to `Hero.jsx`, `OrbitPortrait.jsx`?**
-  _High betweenness centrality (0.035) - this node is a cross-community bridge._
+- **Why does `gsap` connect `Hero.jsx` to `package.json`, `OrbitPortrait.jsx`?**
+  _High betweenness centrality (0.044) - this node is a cross-community bridge._
 - **Should `package.json` be split into smaller, more focused modules?**
-  _Cohesion score 0.05568627450980392 - nodes in this community are weakly interconnected._
-- **Why does `useLanguage()` connect `Language & Site Chrome` to `Hero.jsx`, `react`, `OrbitPortrait.jsx`?**
-  _High betweenness centrality (0.034) - this node is a cross-community bridge._
+  _Cohesion score 0.05185185185185185 - nodes in this community are weakly interconnected._
+- **Why does `useLanguage()` connect `Language & Site Chrome` to `Hero.jsx`, `OrbitPortrait.jsx`?**
+  _High betweenness centrality (0.036) - this node is a cross-community bridge._
 - **Should `Language & Site Chrome` be split into smaller, more focused modules?**
-  _Cohesion score 0.1024390243902439 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08735150244584207 - nodes in this community are weakly interconnected._

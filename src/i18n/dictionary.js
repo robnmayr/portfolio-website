@@ -27,6 +27,7 @@ export const dictionary = {
       // The cursor label over the portrait: the idle text, and one label per
       // orbiting picture (in ring order: robot, football, comic, fluffy cat,
       // burger, keyboard, tabby cat, orange, chip). Placeholders to rewrite.
+      cursorIntro: "That's me",
       cursorIdle: "What's on my mind",
       thoughts: [
         'AI',
@@ -77,6 +78,7 @@ export const dictionary = {
       // Cursor-Label über dem Porträt: der Ruhetext und ein Label pro kreisendem
       // Bild (in Ringreihenfolge: Roboter, Fußball, Comic, Langhaarkatze,
       // Burger, Tastatur, Tigerkatze, Orange, Chip). Platzhalter zum Überschreiben.
+      cursorIntro: 'Das bin ich',
       cursorIdle: 'Was mich beschäftigt',
       thoughts: [
         'KI',

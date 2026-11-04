@@ -1,9 +1,25 @@
 .about {
-  padding: calc(var(--grid-size) * 6) var(--page-inset);
   background-color: var(--color-bg-alt);
+  /* The page's dot grid carries on over the slightly darker section background
+     (same pattern, fixed to the screen like the body's), so it shows through
+     the portrait before its orange has come in. */
+  background-image: var(--dot-pattern);
+  background-size: var(--grid-size) var(--grid-size);
+  background-attachment: fixed;
   /* The orbiting cards may swing out past the portrait panel, but not past the
-     page's sides (no horizontal scroll). */
+     page's sides (no horizontal scroll). `clip`, not `hidden`, so the sticky
+     stage below still sticks. */
   overflow-x: clip;
+}
+
+/* The stage holds the layout and the portrait's canvas (which fills it). On
+   large screens with the 'expand' reveal it is pinned to the top of the screen
+   for a scroll of about two screens, while the portrait shrinks from full-bleed into
+   its place and the ring opens; elsewhere it is an ordinary block. */
+.stage {
+  position: relative;
+  box-sizing: border-box;
+  padding: calc(var(--grid-size) * 6) var(--page-inset);
 }
 
 /* Same 12 columns and page margins as the rest of the page: text on the left,
@@ -19,6 +35,9 @@
 
 .text {
   grid-column: 1 / 7;
+  /* Fades in as the portrait settles (--portrait-settle is set from
+     OrbitPortrait.jsx; without the expand reveal it stays 1). */
+  opacity: clamp(0, calc((var(--portrait-settle, 1) - 0.5) * 2), 1);
 }
 
 .heading {
@@ -27,6 +46,25 @@
 
 .portrait {
   grid-column: 7 / -1;
+}
+
+@media (min-width: 1025px) and (prefers-reduced-motion: no-preference) {
+  .track[data-reveal='expand'] {
+    /* The scroll length (in screen heights) comes from portraitConfig.js. */
+    height: calc(100svh * (1 + var(--portrait-scroll, 1.6)));
+  }
+
+  .track[data-reveal='expand'] .stage {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    display: flex;
+    align-items: center;
+  }
+
+  .track[data-reveal='expand'] .inner {
+    width: 100%;
+  }
 }
 
 @media (max-width: 1024px) {

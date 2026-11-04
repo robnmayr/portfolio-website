@@ -94,9 +94,15 @@ button {
    -------------------------------------------------------------------------- */
 
 #hero,
-#about,
 #projects {
   scroll-margin-top: var(--header-height);
+}
+
+/* About starts with a full-bleed portrait that fills the whole screen under the
+   transparent header, so the jump lands exactly on its top: any offset would leave
+   a strip of the hero (and its scroll hint) visible above it. */
+#about {
+  scroll-margin-top: 0;
 }
 
 /* --------------------------------------------------------------------------
