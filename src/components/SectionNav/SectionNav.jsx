@@ -9,26 +9,20 @@ import userIcon from '../../assets/icons/user.svg'
 import briefcaseIcon from '../../assets/icons/briefcase.svg'
 import styles from './SectionNav.module.css'
 
-// Pixelarticons (MIT, Gerrit Halfmann): home, user, briefcase.
+// Pixel icons: home, user, briefcase.
 const SECTIONS = [
   { id: 'hero', icon: homeIcon },
   { id: 'about', icon: userIcon },
   { id: 'projects', icon: briefcaseIcon },
 ]
 
-// Adapted from the Watermelon UI "Step Indicator" (ui.watermelon.sh,
-// animated-components/step-indicator). Kept: the per-item blur/opacity
-// tooltip reveal driven by motion/react. Dropped: the original's shared
-// clip-path/translateX morph sliding one tooltip's bubble into the next
-// across all three pills' concatenated widths — that math depended on
-// Work Sans's measured text width matching its rendered width pixel for
-// pixel, and Safari resolves the resulting clip-path region several
-// pixels narrower than Chromium for the same input, visibly pushing the
-// icon/label toward the right edge. Each pill now owns an independent
-// tooltip, centered under its own button with plain CSS — no cross-item
-// measurement, so nothing to disagree on between engines. A second
-// "current section" (scrollspy) index still drives the pill's filled
-// state independently of hover.
+// Each pill owns an independent tooltip (a blur/opacity reveal driven by
+// motion/react), centered under its own button with plain CSS: no cross-item
+// measurement, so nothing to disagree on between engines. (An earlier version
+// slid one shared bubble across all three pills; that depended on measured text
+// width, and Safari rendered it several pixels narrower than Chromium.) A
+// second "current section" (scrollspy) index drives the pill's filled state
+// independently of hover.
 export function SectionNav() {
   const { t } = useLanguage()
   const prefersReducedMotion = usePrefersReducedMotion()
@@ -97,7 +91,7 @@ export function SectionNav() {
                 setHoverIndex(null)
               }
             }}
-            onClick={() => scrollToSection(step.id)}
+            onClick={() => scrollToSection(step.id, { settled: true })}
             className={styles.pillButton}
             aria-label={step.label}
           >

@@ -25,6 +25,14 @@
      smaller screens. Hero and About line their content up on it. */
   --page-inset: calc(var(--grid-size) * 6);
 
+  /* The content (header bar, name and intro in the hero, texts, footer) is at most
+     this wide and centered; backgrounds, the dot grid and the full-bleed portrait
+     still run across the whole window. --page-gutter is the distance from the
+     window's edge to the content: the page inset, plus half of whatever is left
+     when the window is wider than --content-max. */
+  --content-max: 1600px;
+  --page-gutter: calc(max(0px, (100vw - var(--content-max)) / 2) + var(--page-inset));
+
   /* Sticky header height — kept as a token so anchor-scroll offsets
      (scroll-margin-top on sections) stay in sync with the real header. */
   --header-height: 68px;

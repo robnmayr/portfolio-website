@@ -4,7 +4,8 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  padding: var(--space-4);
+  /* The background runs across the window; the content stays within --content-max. */
+  padding: var(--space-4) max(var(--space-4), calc((100vw - var(--content-max)) / 2 + var(--space-4)));
   background-color: var(--color-bg-alt);
 }
 

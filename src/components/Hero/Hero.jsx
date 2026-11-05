@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { SplitText } from 'gsap/SplitText'
 import DitherVeil from '@/components/reactbits/DitherVeil'
+import { site } from '../../content'
 import { LedName } from './LedName'
 import { StrokeName } from './StrokeName'
 import { useLanguage } from '../../context/LanguageContext'
@@ -16,11 +17,11 @@ import styles from './Hero.module.css'
 
 gsap.registerPlugin(SplitText)
 
-const NAME = 'Robin Mayer'
+const NAME = site.name
 
 // How the name is drawn: 'stroke' = the giant two-line condensed type, traced as
-// an outline that then fills (React Bits StrokeText); 'classic' = the same type
-// rising out of masks; 'led' = scrolling pixel LED ticker (OriginKit), tilted
+// an outline that then fills; 'classic' = the same type
+// rising out of masks; 'led' = scrolling pixel LED ticker, tilted
 // like the hands. All versions are kept, so switching is just changing this.
 const NAME_DISPLAY = 'stroke'
 
@@ -192,7 +193,7 @@ export function Hero() {
       ctx?.revert()
       el.style.visibility = ''
     }
-  }, [t.hero.intro, prefersReducedMotion])
+  }, [t.hero.text, prefersReducedMotion])
 
   // Pointer for the dither canvases. Each hand is its own canvas, so the hero
   // tracks the cursor itself (one position in screen coordinates, shared by
@@ -305,7 +306,7 @@ export function Hero() {
     }
   }, [isTouch, prefersReducedMotion])
 
-  // DitherVeil (React Bits): ordered Bayer dither in the text/background colors
+  // Dither reveal: ordered Bayer dither in the text/background colors
   // (a negative in dark mode) and the colour trail lingering for 0.8 seconds
   // behind the cursor. The accent rim on the dissolving edge is off (rim: 0);
   // raise it (e.g. 0.2) to bring it back.
@@ -324,7 +325,7 @@ export function Hero() {
   }
 
   return (
-    <section id="hero" ref={rootRef} className={styles.hero} aria-label="Hero">
+    <section id="hero" ref={rootRef} className={styles.hero} aria-label={t.nav.hero}>
       {NAME_DISPLAY === 'stroke' && <StrokeName name={NAME} accent={ink.accent} />}
       {NAME_DISPLAY === 'led' && (
         <>
@@ -376,7 +377,7 @@ export function Hero() {
           fresh element per language keeps React's text update from hitting a
           detached node. */}
       <p key={language} ref={introRef} className={styles.intro}>
-        {t.hero.intro}
+        {t.hero.text}
       </p>
 
       <button

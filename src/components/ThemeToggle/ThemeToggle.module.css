@@ -19,7 +19,7 @@
   outline-offset: 2px;
 }
 
-/* Pixelarticons "sun" / "moon" (MIT, Gerrit Halfmann), drawn as masks so they
+/* The "sun" / "moon" pixel icons, drawn as masks so they
    take the text color (and, unlike the unicode ☀/☾ glyphs, stay monochrome on
    iOS/macOS). 24px = the icon grid at 1x, so every pixel stays crisp. */
 .icon {

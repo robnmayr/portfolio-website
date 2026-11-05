@@ -1,5 +1,4 @@
 /* eslint-disable */
-// Originkit — props baked into the default export.
 "use client";
 
 import { useRef, useEffect, useMemo, type CSSProperties } from "react";

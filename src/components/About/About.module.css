@@ -19,36 +19,79 @@
 .stage {
   position: relative;
   box-sizing: border-box;
-  padding: calc(var(--grid-size) * 6) var(--page-inset);
+  padding: calc(var(--grid-size) * 6) var(--page-gutter);
 }
 
-/* Same 12 columns and page margins as the rest of the page: text on the left,
-   the portrait on the right half. */
+/* Same 12 columns and page margins as the rest of the page (the stage's padding
+   keeps it within --content-max): text on the left, the portrait on the right half. */
 .inner {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   column-gap: var(--grid-size);
   align-items: start;
-  max-width: 120rem;
-  margin-inline: auto;
 }
 
 .text {
   grid-column: 1 / 7;
-  /* Fades in as the portrait settles (--portrait-settle is set from
-     OrbitPortrait.jsx; without the expand reveal it stays 1). */
-  opacity: clamp(0, calc((var(--portrait-settle, 1) - 0.5) * 2), 1);
 }
 
-.heading {
-  font-size: clamp(2rem, 5vw, 3rem);
+/* The copy is revealed word by word as you scroll (ScrollReveal; each piece
+   below is the text inside one of them). The component sets its own size, weight
+   and margin, so these are written one class deeper to win. Sizes follow the
+   screen's height as well as its width, so the whole block still fits one
+   screen on a short laptop. */
+.text .headingBox {
+  margin: 0;
+}
+
+.text .heading {
+  max-width: 42rem;
+  font-family: var(--font-display);
+  font-size: clamp(2.25rem, min(2rem + 2.6vw, 7.5vh), 4.5rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+}
+
+/* The 'fly' heading (FlyingHeading.jsx): same look as the revealed one, but
+   above the portrait's canvas so that it can fly in over the orange. */
+.text .flyingBox {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+}
+
+.text .flyingText {
+  display: block;
+  width: fit-content;
+}
+
+.text .paragraphBox {
+  margin: var(--space-4) 0 0;
+}
+
+.text .lead {
+  max-width: 34rem;
+  font-size: clamp(1.3rem, min(1rem + 1.1vw, 3.2vh), 2rem);
+  font-weight: 500;
+  line-height: 1.3;
+  text-wrap: pretty;
+}
+
+.text .paragraph {
+  max-width: 34rem;
+  font-size: clamp(1.05rem, min(0.8rem + 0.7vw, 2.4vh), 1.5rem);
+  font-weight: 400;
+  line-height: 1.5;
+  text-wrap: pretty;
+  color: color-mix(in srgb, var(--color-text) 85%, transparent);
 }
 
 .portrait {
   grid-column: 7 / -1;
 }
 
-@media (min-width: 1025px) and (prefers-reduced-motion: no-preference) {
+@media (prefers-reduced-motion: no-preference) {
   .track[data-reveal='expand'] {
     /* The scroll length (in screen heights) comes from portraitConfig.js. */
     height: calc(100svh * (1 + var(--portrait-scroll, 1.6)));
@@ -60,6 +103,8 @@
     height: 100svh;
     display: flex;
     align-items: center;
+    /* The text block must fit the screen's height. */
+    padding-block: calc(var(--grid-size) * 3);
   }
 
   .track[data-reveal='expand'] .inner {
@@ -67,14 +112,42 @@
   }
 }
 
+/* Narrow screens: one column with the portrait on top of the heading (the stage
+   is pinned and animated just the same). The portrait is as wide as the column
+   but never so tall that the heading would not fit under it on the screen. It
+   sits right under the header, not in the middle of the screen: the paragraphs
+   come directly after the heading (see .copy). */
 @media (max-width: 1024px) {
+  .stage {
+    padding-top: calc(var(--header-height) + var(--space-3));
+    padding-bottom: var(--grid-size);
+  }
+
+  .track[data-reveal='expand'] .stage {
+    align-items: flex-start;
+    padding-top: calc(var(--header-height) + var(--space-3));
+    padding-bottom: var(--grid-size);
+  }
+
   .text,
   .portrait {
     grid-column: 1 / -1;
   }
 
   .portrait {
-    width: min(100%, 28rem);
-    margin: var(--space-6) auto 0;
+    order: -1;
+    width: max(11rem, min(100%, 28rem, calc((100svh - 14rem) * 0.8)));
+    margin: 0 auto var(--space-4);
+  }
+
+  /* The paragraphs, below the pinned stage, pulled up over the empty space at
+     the stage's bottom (--stage-slack, measured in About.jsx). */
+  .copy {
+    margin-top: calc(var(--stage-slack, 0px) * -1 + var(--space-4));
+    padding: 0 var(--page-gutter) calc(var(--grid-size) * 4);
+  }
+
+  .copy .paragraphBox:first-child {
+    margin-top: 0;
   }
 }

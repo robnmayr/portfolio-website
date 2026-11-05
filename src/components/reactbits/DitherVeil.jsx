@@ -1,4 +1,4 @@
-// React Bits "DitherVeil" (JS + CSS, needs ogl), adapted for this site:
+// Dither reveal (WebGL through ogl) with a lingering colour trail, for this site:
 //  - Transparent canvas. The picture's alpha channel is kept (premultiplied
 //    output), so cut-out PNGs sit on the page instead of on a solid rectangle.
 //  - `motion` prop: live image transform read every frame ({x, y, scale,

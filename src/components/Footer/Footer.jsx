@@ -1,4 +1,5 @@
 import { useLanguage } from '../../context/LanguageContext'
+import { site } from '../../content'
 import styles from './Footer.module.css'
 
 export function Footer() {
@@ -7,20 +8,19 @@ export function Footer() {
   return (
     <footer className={styles.footer}>
       <ul className={styles.links}>
+        {/* The addresses are in src/content/site.md; an empty one links nowhere yet. */}
         <li>
-          {/* TODO: replace with real LinkedIn profile URL */}
-          <a href="#" target="_blank" rel="noreferrer">
+          <a href={site.links.linkedin || '#'} target="_blank" rel="noreferrer">
             {t.footer.linkedin}
           </a>
         </li>
         <li>
-          <a href="https://github.com/robnmayr" target="_blank" rel="noreferrer">
+          <a href={site.links.github || '#'} target="_blank" rel="noreferrer">
             {t.footer.github}
           </a>
         </li>
         <li>
-          {/* TODO: replace with real email address (consider obfuscating) */}
-          <a href="#">{t.footer.email}</a>
+          <a href={site.links.email ? `mailto:${site.links.email}` : '#'}>{t.footer.email}</a>
         </li>
       </ul>
 

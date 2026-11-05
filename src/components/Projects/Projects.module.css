@@ -1,5 +1,5 @@
 .projects {
-  padding: var(--space-8) var(--space-4);
+  padding: var(--space-8) var(--page-gutter);
 }
 
 .heading {

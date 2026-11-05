@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { dictionary } from '../i18n/dictionary'
+import { dictionary, site } from '../content'
 
 const LanguageContext = createContext(null)
 const STORAGE_KEY = 'language'
@@ -20,6 +20,7 @@ export function LanguageProvider({ children }) {
 
   useEffect(() => {
     document.documentElement.setAttribute('lang', language)
+    document.title = site.name
     window.localStorage.setItem(STORAGE_KEY, language)
   }, [language])
 

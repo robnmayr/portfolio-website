@@ -20,8 +20,8 @@ function pitchForViewport() {
   return Math.max(6, Math.min(MAX_CELL, Math.floor((window.innerWidth * BAND_WIDTH) / NAME_COLUMNS)))
 }
 
-// The name as a scrolling LED ticker (OriginKit "Pixel LED Display"), tilted
-// like the hands. Lit dots take the text color; unlit ones are transparent.
+// The name as a scrolling LED ticker, tilted like the hands. Lit dots take the
+// text color; unlit ones are transparent.
 export function LedName({ name, rotation, ink }) {
   const [cell, setCell] = useState(pitchForViewport)
 

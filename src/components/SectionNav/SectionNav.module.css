@@ -67,7 +67,7 @@
    auto-width calculation (a replaced-element quirk), silently shrinking the
    bubble and eating into the padding on one side. A plain span is a normal box
    with no such quirk (the icon itself is now a mask on a span, see below).
-   24px = the Pixelarticons grid at 1x, so every pixel of the icon stays a whole
+   24px = the pixel icons' grid at 1x, so every pixel of the icon stays a whole
    number of device pixels and crisp. */
 .tooltipIconWrap {
   display: inline-flex;
@@ -81,7 +81,7 @@
   margin: -2px;
 }
 
-/* Pixelarticons icon (url set inline as --icon), drawn as a mask so it takes
+/* Pixel icon (url set inline as --icon), drawn as a mask so it takes
    the tooltip's text color. */
 .tooltipIcon {
   width: 100%;

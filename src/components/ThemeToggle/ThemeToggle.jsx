@@ -14,12 +14,8 @@ export function ThemeToggle() {
   const isDark = theme === 'dark'
   const label = isDark ? t.theme.toggleToLight : t.theme.toggleToDark
 
-  // Circle-spread reveal via the View Transitions API, adapted from a
-  // "circle-spread" toggle-theme component the user found online (Next.js/
-  // Tailwind/class-based theming, lucide-react icons) — reusing this
-  // project's own toggleTheme() and data-theme convention instead of
-  // reimplementing theme state, dropping the other animation variants and
-  // the dynamic <style> injection since only this one type is wanted here.
+  // Circle-spread reveal via the View Transitions API, reusing this project's
+  // own toggleTheme() and data-theme convention.
   async function handleClick() {
     const supportsViewTransition = typeof document.startViewTransition === 'function'
     if (!supportsViewTransition || prefersReducedMotion || !buttonRef.current) {

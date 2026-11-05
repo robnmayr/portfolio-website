@@ -4,9 +4,18 @@
   "3": "steps",
   "5": "OrbitPortrait.jsx",
   "6": "dither-reveal.tsx",
-  "7": "deploy.yml",
+  "7": "ScrollReveal.jsx",
+  "8": "SectionNav.jsx",
   "9": "pixel-led-display.tsx",
   "10": "portfolio-website",
   "11": "CLAUDE.md",
-  "13": "usercursor.tsx"
+  "12": "Content",
+  "13": "usercursor.tsx",
+  "14": "de/about.md",
+  "15": "de/hero.md",
+  "16": "de/ui.md",
+  "17": "en/about.md",
+  "18": "en/hero.md",
+  "19": "en/ui.md",
+  "20": "site.md"
 }

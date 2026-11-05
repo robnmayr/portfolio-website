@@ -15,6 +15,7 @@ import {
   SATURATE_SCROLL,
   SHRINK_SCROLL,
 } from './portraitConfig'
+import { readScrolled } from './pinned'
 import styles from './OrbitPortrait.module.css'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -28,20 +29,14 @@ const THOUGHTS = Object.values(
 // illustrations circling the head like the stars in an old cartoon, passing
 // behind the head on the far side and in front of it on the near side.
 //
-// The ring is the one from the ThreeUI "Gallery Heading" (Matte Rise variant,
-// threeui.com), mirrored top to bottom: a circle in a tilted plane, projected
-// in perspective, with flat cards standing on it, turned along the ring and
-// depth-sorted, so they foreshorten and go edge-on at the sides. Kept from it:
-// the axis angle, the camera distance, the starting phase and the revolution
-// time. Changed: the cards are cut-out illustrations instead of painted plates
-// (no rounded-rect clip), the ring is seen from below instead of above, its
-// plane tilt is steeper (77.5 degrees instead of 60.5, so the ring is a flatter
-// ellipse), it is centered on the head instead of the headline, it always turns
-// at the same speed (the original rests and only turns, sprung, under the
-// pointer), and every card bobs up and down on its own cycle.
+// The ring is a circle in a tilted plane, projected in perspective, with flat
+// cards standing on it, turned along the ring and depth-sorted, so they
+// foreshorten and go edge-on at the sides. It is seen from below, its plane is
+// tilted 77.5 degrees (a flat ellipse), it always turns at the same speed, and
+// every card bobs up and down on its own cycle.
 const RING = {
   axis: 25.5, // screen angle of the ring's major axis, degrees
-  tilt: 77.5, // tilt of the ring's plane away from facing the viewer, degrees (the original: 60.5)
+  tilt: 77.5, // tilt of the ring's plane away from facing the viewer, degrees
   dist: 13, // camera distance, in ring radii
   phase: 93, // angle of card 0 at t = 0, degrees
   direction: 1, // which way the cards travel
@@ -79,6 +74,9 @@ const RING_LABEL_AT = 0.4
 // How large the head is at the start of the 'expand' reveal, as a fraction of
 // the stage's height (1 = it fills it from the bottom edge up).
 const EXPAND_HEAD_SCALE = 0.8
+// ...but never wider than the stage (on a narrow screen the head would otherwise
+// be cut off at the sides): as a fraction of the stage's width.
+const EXPAND_HEAD_MAX_WIDTH = 1
 const clamp01 = (value) => Math.min(1, Math.max(0, value))
 const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3)
 const easeOutBack = (t) => 1 + 2.70158 * Math.pow(t - 1, 3) + 1.70158 * Math.pow(t - 1, 2)
@@ -113,7 +111,7 @@ const BACK_TINT = 'rgba(10, 12, 24, 0.4)'
 
 const rad = (deg) => (deg * Math.PI) / 180
 
-// Ring plane basis (see the ThreeUI source): U, V span the plane, AXIS is its
+// Ring plane basis: U, V span the plane, AXIS is its
 // normal, z points at the viewer.
 const axis = rad(RING.axis)
 const ratio = Math.cos(rad(RING.tilt)) // semi-minor / semi-major of the projected ring
@@ -382,17 +380,11 @@ export function OrbitPortrait() {
     // stage, 1 = settled in place.
     let scrolled = PORTRAIT_SCROLL
     let settle = 1
-    const readScrolled = () => {
-      if (!expandMode || !stage || !track || getComputedStyle(stage).position !== 'sticky') {
-        return PORTRAIT_SCROLL
-      }
-      const rect = track.getBoundingClientRect()
-      return Math.min(PORTRAIT_SCROLL, Math.max(0, -rect.top / stage.offsetHeight))
-    }
+    const readScrolledNow = () => (expandMode ? readScrolled(stage) : PORTRAIT_SCROLL)
     const smooth = (t) => t * t * (3 - 2 * t)
     const updateScroll = (dt) => {
       if (!expandMode) return
-      const target = readScrolled()
+      const target = readScrolledNow()
       scrolled = dt > 0 ? scrolled + (target - scrolled) * (1 - Math.exp(-dt / 0.1)) : target
       intro.saturation = smooth(clamp01(scrolled / SATURATE_SCROLL))
       intro.dissolve = clamp01((scrolled - SATURATE_SCROLL) / DISSOLVE_SCROLL)
@@ -464,7 +456,7 @@ export function OrbitPortrait() {
       const headLeft = panelBox.left + (panelWidth - headWidth) / 2
       const headTop = panelBox.bottom + 2 * dpr - headHeight
       const anchorX = (panelBox.left + panelBox.right) / 2
-      const scale = (height / headHeight) * EXPAND_HEAD_SCALE
+      const scale = Math.min((height / headHeight) * EXPAND_HEAD_SCALE, (width / headWidth) * EXPAND_HEAD_MAX_WIDTH)
       const paintHead = (ctx) => {
         ctx.imageSmoothingQuality = 'high'
         ctx.setTransform(scale, 0, 0, scale, width / 2 - anchorX * scale, height - panelBox.bottom * scale)
@@ -597,7 +589,8 @@ export function OrbitPortrait() {
       // already be opening) is shown larger and lower: a scale about the bottom
       // middle of the panel's place, moved from the stage's bottom middle.
       const anchorX = (panelLeft + panelRight) / 2
-      const viewScale = expanding ? mix((height / headHeight) * EXPAND_HEAD_SCALE, 1) : 1
+      const startScale = Math.min((height / headHeight) * EXPAND_HEAD_SCALE, (width / headWidth) * EXPAND_HEAD_MAX_WIDTH)
+      const viewScale = expanding ? mix(startScale, 1) : 1
       const viewX = expanding ? mix(width / 2, anchorX) : anchorX
       const viewY = expanding ? mix(height, panelBottom) : panelBottom
       const toViewX = (x) => viewX + (x - anchorX) * viewScale
@@ -881,10 +874,10 @@ export function OrbitPortrait() {
       <figure ref={frameRef} className={styles.frame} role="img" aria-label={t.about.portraitAlt}>
         <div ref={panelRef} className={styles.panel} />
       </figure>
-      {/* OriginKit "User Cursor", used only for its label: a pill that trails the
-          pointer over the frame and says what the pointer is over. The component's
-          own arrow is replaced by nothing and the normal pointer is shown again
-          (the component hides it by default; `cursor: auto` below undoes that). */}
+      {/* The cursor label: a pill that trails the pointer over the frame and says
+          what the pointer is over. The cursor component's own arrow is replaced by
+          nothing and the normal pointer is shown again (the component hides it by
+          default; `cursor: auto` below undoes that). */}
       <div ref={cursorLayerRef} className={styles.cursorLayer}>
         <UserCursor
           color="#f6f6f6"

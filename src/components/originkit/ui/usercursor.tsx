@@ -1,5 +1,4 @@
 /* eslint-disable */
-// Originkit — props baked into the default export.
 import * as React from "react"
 import { useEffect, useMemo, useRef, useState } from "react"
 const useIsStaticRenderer = () => false

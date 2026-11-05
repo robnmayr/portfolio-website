@@ -5,9 +5,9 @@ import styles from './Hero.module.css'
 const toRgb = ([r, g, b]) =>
   `rgb(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)})`
 
-// The name as outlined type that draws itself on (React Bits "StrokeText"): an
-// accent-colored outline is traced letter by letter, then the text color wipes
-// in from the left. Same block, size and line spacing as the classic name (the
+// The name as outlined type that draws itself on: an accent-colored outline is
+// traced letter by letter, then the text color wipes in from the left. Same
+// block, size and line spacing as the classic name (the
 // h1 carries .name, so --name-size, the position and the 0.782 line pitch are
 // shared); each word is its own StrokeText so the two lines keep that pitch.
 export function StrokeName({ name, accent }) {

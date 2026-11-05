@@ -12,7 +12,7 @@
   );
   --name-rows: 6;
   --intro-rows: 6;
-  --hero-inset: var(--page-inset);
+  --hero-inset: var(--page-gutter);
 
   position: relative;
   /* The (oversized, mostly transparent) hands box is taken out of flow so it
@@ -174,7 +174,7 @@
   border-radius: 4px;
 }
 
-/* Pixelarticons "arrow-big-down" (MIT, Gerrit Halfmann), drawn as a mask so it
+/* The "arrow-big-down" pixel icon, drawn as a mask so it
    takes the button's text color. Sized to the label's cap height; 12px is
    exactly half of the icon's 24px grid, so every pixel stays 1px and crisp. */
 .arrow {
